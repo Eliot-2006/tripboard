@@ -1,4 +1,5 @@
 import { BedDouble, MapPin, Plane } from "lucide-react";
+import type { Ref } from "react";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, itemCost } from "@/lib/budget";
 import { formatItemTime } from "@/lib/time";
@@ -8,16 +9,26 @@ import { locationLabel, STATUS_LABEL } from "./labels";
 
 const ICONS = { flight: Plane, stay: BedDouble, activity: MapPin } as const;
 
-type Props = { item: Item; currency: string; selected: boolean; onSelect: () => void };
+type Props = {
+  item: Item;
+  currency: string;
+  selected: boolean;
+  onSelect: () => void;
+  /** Id of the detail region this card expands while selected. */
+  detailsId: string;
+  ref?: Ref<HTMLButtonElement>;
+};
 
-export function ItemCard({ item, currency, selected, onSelect }: Props) {
+export function ItemCard({ item, currency, selected, onSelect, detailsId, ref }: Props) {
   const Icon = ICONS[item.type];
   const cost = itemCost(item);
   const place = locationLabel(item);
   return (
     <button
+      ref={ref}
       type="button"
-      aria-pressed={selected}
+      aria-expanded={selected}
+      aria-controls={selected ? detailsId : undefined}
       onClick={onSelect}
       className={cn(
         "flex min-h-11 w-full items-start gap-3 rounded-lg border p-3 text-left hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2",
