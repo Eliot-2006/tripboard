@@ -7,10 +7,14 @@ import {
   formatDay,
   formatItemTime,
   formatTime,
+  isRealLocalTime,
   localDay,
   localToUtcIso,
+  nextDay,
+  resolveTimeZone,
   shiftDays,
   shiftItemToDay,
+  timeZoneOptions,
 } from "@/lib/time";
 
 const LA = "America/Los_Angeles";
@@ -151,5 +155,107 @@ describe("shiftItemToDay", () => {
   it("leaves flexible and untimed items alone", () => {
     expect(shiftItemToDay(makeItem({ is_flexible: true }), "2027-04-14")).toEqual({ start_at: null, end_at: null });
     expect(shiftItemToDay(makeItem({ start_at: null }), "2027-04-14")).toEqual({ start_at: null, end_at: null });
+  });
+});
+
+describe("resolveTimeZone", () => {
+  it("accepts zone ids in any letter case and returns the canonical id", () => {
+    expect(resolveTimeZone("Asia/Tokyo")).toBe("Asia/Tokyo");
+    expect(resolveTimeZone(" asia/tokyo ")).toBe("Asia/Tokyo");
+    expect(resolveTimeZone("utc")).toBe("UTC");
+  });
+
+  it("accepts a zone's city, with spaces or underscores", () => {
+    expect(resolveTimeZone("Los Angeles")).toBe("America/Los_Angeles");
+    expect(resolveTimeZone("new_york")).toBe("America/New_York");
+    expect(resolveTimeZone("tokyo")).toBe("Asia/Tokyo");
+  });
+
+  it("rejects unknown names, blanks and fixed offsets", () => {
+    expect(resolveTimeZone("Tokio")).toBeNull();
+    expect(resolveTimeZone("  ")).toBeNull();
+    expect(resolveTimeZone("+09:00")).toBeNull();
+    expect(resolveTimeZone("EST")).toBeNull();
+    expect(resolveTimeZone("Etc/GMT+9")).toBeNull();
+  });
+
+  it("canonicalises aliases to a listed zone", () => {
+    expect(resolveTimeZone("us/pacific")).toBe("America/Los_Angeles");
+    expect(resolveTimeZone("gmt")).toBe("UTC");
+  });
+
+  it("finds renamed cities whichever name the browser lists", () => {
+    for (const [city, offset] of [
+      ["Kolkata", "+5:30"],
+      ["Calcutta", "+5:30"],
+      ["Kyiv", "+3"],
+      ["Ho Chi Minh", "+7"],
+    ]) {
+      const zone = resolveTimeZone(city);
+      expect(zone, city).not.toBeNull();
+      expect(formatDateTime("2027-07-01T00:00:00.000Z", zone!), city).toContain(`GMT${offset}`);
+    }
+  });
+});
+
+describe("timeZoneOptions", () => {
+  it("labels each zone with its city and offset", () => {
+    const tokyo = timeZoneOptions().find((o) => o.value === "Asia/Tokyo");
+    expect(tokyo?.label).toBe("Tokyo · GMT+9");
+    expect(timeZoneOptions().some((o) => o.value === "UTC")).toBe(true);
+  });
+});
+
+describe("isRealLocalTime", () => {
+  it("is false inside a spring-forward gap and true otherwise", () => {
+    expect(isRealLocalTime("2027-03-14", "02:30", "America/New_York")).toBe(false);
+    expect(isRealLocalTime("2027-03-14", "03:30", "America/New_York")).toBe(true);
+    expect(isRealLocalTime("2027-11-07", "01:30", "America/New_York")).toBe(true); // repeated hour still exists
+  });
+});
+
+describe("nextDay", () => {
+  it("crosses month and year ends", () => {
+    expect(nextDay("2027-04-30")).toBe("2027-05-01");
+    expect(nextDay("2027-12-31")).toBe("2028-01-01");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("shows a GMT offset for every zone", () => {
+    expect(formatDateTime("2027-04-10T18:30:00.000Z", "America/Los_Angeles")).toBe("Sat, Apr 10, 11:30 AM GMT-7");
+    expect(formatDateTime("2027-04-11T06:45:00.000Z", "Asia/Tokyo")).toBe("Sun, Apr 11, 3:45 PM GMT+9");
+  });
+});
+
+describe("formatItemTime for flights", () => {
+  const flight = makeItem({
+    type: "flight",
+    start_at: "2027-04-10T18:30:00.000Z",
+    end_at: "2027-04-11T06:45:00.000Z",
+    start_timezone: "America/Los_Angeles",
+    end_timezone: "Asia/Tokyo",
+  });
+
+  it("shows the arrival, marked +1 when it lands on a later local day", () => {
+    expect(formatItemTime(flight)).toBe("11:30 AM → 3:45 PM +1");
+  });
+
+  it("leaves out +N for a same-day arrival and shows other types' start only", () => {
+    expect(formatItemTime({ ...flight, end_at: "2027-04-10T20:00:00.000Z", end_timezone: "America/Los_Angeles" })).toBe(
+      "11:30 AM → 1:00 PM",
+    );
+    expect(formatItemTime({ ...flight, type: "activity" })).toBe("11:30 AM");
+  });
+
+  it("marks an arrival on an earlier local day across the date line", () => {
+    const eastbound = {
+      ...flight,
+      start_at: "2027-04-11T15:30:00.000Z", // Apr 12, 00:30 in Tokyo
+      end_at: "2027-04-11T23:00:00.000Z", // Apr 11, 13:00 in Honolulu
+      start_timezone: "Asia/Tokyo",
+      end_timezone: "Pacific/Honolulu",
+    };
+    expect(formatItemTime(eastbound)).toBe("12:30 AM → 1:00 PM −1");
   });
 });

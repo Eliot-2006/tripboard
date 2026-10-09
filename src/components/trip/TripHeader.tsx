@@ -2,7 +2,9 @@ import { Button } from "@/components/ui/button";
 import { formatDay } from "@/lib/time";
 import type { Trip } from "@/types";
 
-export function TripHeader({ trip }: { trip: Trip }) {
+type Props = { trip: Trip; onAdd: () => void };
+
+export function TripHeader({ trip, onAdd }: Props) {
   const places = trip.destinations.length > 0 ? ` · ${trip.destinations.join(", ")}` : "";
   return (
     <header className="flex flex-wrap items-start justify-between gap-2">
@@ -14,10 +16,11 @@ export function TripHeader({ trip }: { trip: Trip }) {
         </p>
       </div>
       <div className="flex gap-2">
+        {/* Editing trips arrives with accounts (TRIP-3). */}
         <Button variant="outline" className="min-h-11" disabled>
           Edit
         </Button>
-        <Button className="min-h-11" disabled>
+        <Button className="min-h-11" onClick={onAdd}>
           Add to trip
         </Button>
       </div>

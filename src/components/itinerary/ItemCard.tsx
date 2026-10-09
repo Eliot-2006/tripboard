@@ -1,4 +1,4 @@
-import { BedDouble, MapPin, Plane } from "lucide-react";
+import { BedDouble, MapPin, Plane, UtensilsCrossed } from "lucide-react";
 import type { Ref } from "react";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, itemCost } from "@/lib/budget";
@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { Item } from "@/types";
 import { locationLabel, STATUS_LABEL } from "./labels";
 
-const ICONS = { flight: Plane, stay: BedDouble, activity: MapPin } as const;
+const ICONS = { flight: Plane, stay: BedDouble, activity: MapPin, restaurant: UtensilsCrossed } as const;
 
 type Props = {
   item: Item;
@@ -20,7 +20,7 @@ type Props = {
 };
 
 export function ItemCard({ item, currency, selected, onSelect, detailsId, ref }: Props) {
-  const Icon = ICONS[item.type];
+  const Icon = ICONS[item.type === "activity" && item.metadata.category === "restaurant" ? "restaurant" : item.type];
   const cost = itemCost(item);
   const place = locationLabel(item);
   return (
@@ -31,8 +31,9 @@ export function ItemCard({ item, currency, selected, onSelect, detailsId, ref }:
       aria-controls={selected ? detailsId : undefined}
       onClick={onSelect}
       className={cn(
-        "flex min-h-11 w-full items-start gap-3 rounded-lg border p-3 text-left hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2",
-        selected && "border-primary bg-accent",
+        "flex min-h-11 w-full items-start gap-3 rounded-lg border p-3 text-left hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        // A border, not a fill, marks the selection: grey fills hid the badges and lowered text contrast.
+        selected && "border-primary ring-1 ring-primary hover:bg-background",
       )}
     >
       <Icon className="mt-0.5 size-5 shrink-0" aria-hidden />
