@@ -4,9 +4,9 @@ import { formatDateTime } from "@/lib/time";
 import type { Item } from "@/types";
 import { locationLabel, PAYMENT_LABEL, STATUS_LABEL, TYPE_LABEL } from "./labels";
 
-type Props = { item: Item; currency: string; onClose: () => void };
+type Props = { id: string; item: Item; currency: string; onClose: () => void };
 
-export function DetailCard({ item, currency, onClose }: Props) {
+export function DetailCard({ id, item, currency, onClose }: Props) {
   const startTz = item.start_timezone ?? "UTC";
   const money = (n: number | null) => (n === null ? null : formatMoney(n, currency));
   const rows: [string, string | null][] = [
@@ -25,9 +25,9 @@ export function DetailCard({ item, currency, onClose }: Props) {
   const hasPin = item.start_lat !== null && item.start_lng !== null;
 
   return (
-    <section aria-label="Item details" className="rounded-lg border p-4">
+    <section id={id} aria-label="Item details" className="rounded-lg border p-4">
       <div className="mb-3 flex items-start justify-between gap-2">
-        <h2 className="text-lg font-semibold">{item.title}</h2>
+        <h3 className="text-lg font-semibold">{item.title}</h3>
         <Button variant="ghost" className="min-h-11" onClick={onClose}>
           Close
         </Button>

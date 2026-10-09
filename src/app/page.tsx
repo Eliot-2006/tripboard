@@ -9,10 +9,13 @@ export default function Home() {
         Your whole trip in one place: a day-by-day itinerary with a map that shows every stop.
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        <Link href="/signup" className={buttonVariants({ size: "lg" })}>
+        <Link href="/demo" className={buttonVariants({ size: "lg" })}>
+          Try the demo
+        </Link>
+        <Link href="/signup" className={buttonVariants({ variant: "outline", size: "lg" })}>
           Sign up
         </Link>
-        <Link href="/login" className={buttonVariants({ variant: "outline", size: "lg" })}>
+        <Link href="/login" className={buttonVariants({ variant: "ghost", size: "lg" })}>
           Log in
         </Link>
       </div>

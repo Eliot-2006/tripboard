@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import { DateRangeControl } from "@/components/itinerary/DateRangeControl";
-import { DetailCard } from "@/components/itinerary/DetailCard";
 import { Itinerary } from "@/components/itinerary/Itinerary";
 import { LazyMap } from "@/components/map/LazyMap";
 import { TripHeader } from "@/components/trip/TripHeader";
@@ -22,6 +21,15 @@ export function Workspace({ tripId }: { tripId: string }) {
   const select = useWorkspace((s) => s.select);
   const [view, setView] = useState<"itinerary" | "map">("itinerary");
 
+  // Drop a selection the date range hides, so widening the range later doesn't reopen it unasked.
+  const selectedItem = items.data?.find((i) => i.id === selectedId);
+  const tripRange = trip.data ? (range ?? { start: trip.data.start_date, end: trip.data.end_date }) : null;
+  const selectionHidden =
+    selectedItem !== undefined && tripRange !== null && visibleItems([selectedItem], tripRange).length === 0;
+  useEffect(() => {
+    if (selectionHidden) select(null);
+  }, [selectionHidden, select]);
+
   if (trip.isPending || items.isPending) return <p role="status" className="p-6">Loading trip…</p>;
   if (trip.isError || items.isError) {
     return (
@@ -37,7 +45,6 @@ export function Workspace({ tripId }: { tripId: string }) {
   const effective = range ?? { start: t.start_date, end: t.end_date };
   const visible = visibleItems(all, effective);
   const days = daysBetween(effective.start, effective.end);
-  const selected = all.find((i) => i.id === selectedId) ?? null;
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4">
@@ -62,7 +69,6 @@ export function Workspace({ tripId }: { tripId: string }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section aria-label="Itinerary" className={cn("flex flex-col gap-4", view === "map" && "hidden lg:flex")}>
-          {selected && <DetailCard item={selected} currency={t.currency} onClose={() => select(null)} />}
           <Itinerary
             tripStart={t.start_date}
             days={days}

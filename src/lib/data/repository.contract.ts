@@ -71,6 +71,24 @@ export function runRepositoryContract(name: string, make: () => Promise<Reposito
       await expect(repo.moveItem("nope", "2027-04-11", 1000)).rejects.toThrow();
     });
 
+    it("rejects moving an item to a trip that does not exist", async () => {
+      const { repo, trip } = await setup();
+      const item = await repo.createItem(makeNewItem({ trip_id: trip.id }));
+      await expect(repo.updateItem(item.id, { trip_id: "nope" })).rejects.toThrow();
+      expect((await repo.getItems(trip.id)).map((i) => i.id)).toEqual([item.id]);
+    });
+
+    it("leaves fields untouched when a patch sets them to undefined", async () => {
+      const { repo, trip } = await setup();
+      const item = await repo.createItem(makeNewItem({ trip_id: trip.id, notes: "Bring cash" }));
+      const updated = await repo.updateItem(item.id, { title: "Dinner", notes: undefined });
+      expect(updated.title).toBe("Dinner");
+      expect(updated.notes).toBe("Bring cash");
+      const renamed = await repo.updateTrip(trip.id, { name: "Renamed", total_budget: undefined });
+      expect(renamed.name).toBe("Renamed");
+      expect(renamed.total_budget).toBeNull();
+    });
+
     it("deleting a trip deletes its items", async () => {
       const { repo, trip } = await setup();
       await repo.createItem(makeNewItem({ trip_id: trip.id }));

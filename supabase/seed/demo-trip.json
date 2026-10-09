@@ -1,0 +1,126 @@
+{
+  "trips": [
+    {
+      "id": "demo-trip",
+      "user_id": "demo-user",
+      "name": "Japan 2027",
+      "start_date": "2027-04-10",
+      "end_date": "2027-04-18",
+      "destinations": ["Tokyo", "Kyoto"],
+      "currency": "USD",
+      "total_budget": 3000,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "items": [
+    {
+      "id": "demo-flight-out", "trip_id": "demo-trip", "type": "flight", "title": "LAX to Tokyo Haneda",
+      "day": "2027-04-10", "position": 1000,
+      "start_at": "2027-04-10T18:30:00.000Z", "end_at": "2027-04-11T06:45:00.000Z",
+      "start_timezone": "America/Los_Angeles", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Los Angeles (LAX)", "start_lat": 33.9416, "start_lng": -118.4085,
+      "end_location_name": "Tokyo Haneda (HND)", "end_lat": 35.5494, "end_lng": 139.7798,
+      "estimated_cost": 872, "actual_cost": 872, "status": "reserved", "payment_status": "paid",
+      "confirmation_number": "NH7K2Q",
+      "metadata": { "airline": "ANA", "flight_number": "NH105", "seat": "32A" }
+    },
+    {
+      "id": "demo-stay-tokyo", "trip_id": "demo-trip", "type": "stay", "title": "Hotel Gracery Shinjuku",
+      "day": "2027-04-11", "position": 1000,
+      "start_at": "2027-04-11T07:30:00.000Z", "end_at": "2027-04-14T02:00:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Hotel Gracery Shinjuku", "start_address": "1 Chome-19-1 Kabukicho, Shinjuku City",
+      "start_lat": 35.6955, "start_lng": 139.7003,
+      "estimated_cost": 620, "status": "reserved", "payment_status": "unpaid",
+      "confirmation_number": "GRC-48213", "metadata": { "room": "Double" }
+    },
+    {
+      "id": "demo-ramen", "trip_id": "demo-trip", "type": "activity", "title": "Ramen at Ichiran Shinjuku",
+      "day": "2027-04-11", "position": 2000,
+      "start_at": "2027-04-11T10:00:00.000Z", "end_at": "2027-04-11T11:00:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Ichiran Shinjuku", "start_lat": 35.6911, "start_lng": 139.7005,
+      "estimated_cost": 18, "metadata": { "category": "restaurant" }
+    },
+    {
+      "id": "demo-sensoji", "trip_id": "demo-trip", "type": "activity", "title": "Senso-ji Temple",
+      "day": "2027-04-12", "position": 1000,
+      "start_at": "2027-04-12T00:00:00.000Z", "end_at": "2027-04-12T02:00:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Senso-ji Temple", "start_lat": 35.7148, "start_lng": 139.7967,
+      "estimated_cost": 0, "metadata": { "category": "activity" }
+    },
+    {
+      "id": "demo-teamlab", "trip_id": "demo-trip", "type": "activity", "title": "teamLab Planets",
+      "day": "2027-04-12", "position": 2000,
+      "start_at": "2027-04-12T05:00:00.000Z", "end_at": "2027-04-12T07:00:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "teamLab Planets", "start_lat": 35.6491, "start_lng": 139.7897,
+      "estimated_cost": 32, "actual_cost": 35, "status": "reserved", "payment_status": "paid",
+      "confirmation_number": "TLP-99120", "metadata": { "ticket_info": "Timed entry" }
+    },
+    {
+      "id": "demo-akihabara", "trip_id": "demo-trip", "type": "activity", "title": "Explore Akihabara",
+      "day": "2027-04-12", "position": 3000, "is_flexible": true,
+      "start_timezone": "Asia/Tokyo",
+      "start_location_name": "Akihabara", "start_lat": 35.6984, "start_lng": 139.7731,
+      "estimated_cost": 40, "status": "idea",
+      "notes": "Retro games and arcades if there is energy left",
+      "metadata": { "category": "activity" }
+    },
+    {
+      "id": "demo-tsukiji", "trip_id": "demo-trip", "type": "activity", "title": "Breakfast at Tsukiji Outer Market",
+      "day": "2027-04-13", "position": 1000,
+      "start_at": "2027-04-12T23:00:00.000Z", "end_at": "2027-04-13T00:30:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Tsukiji Outer Market", "start_lat": 35.6655, "start_lng": 139.7707,
+      "estimated_cost": 25, "metadata": { "category": "restaurant" }
+    },
+    {
+      "id": "demo-shinkansen", "trip_id": "demo-trip", "type": "activity", "title": "Shinkansen to Kyoto",
+      "day": "2027-04-14", "position": 1000,
+      "start_at": "2027-04-14T01:00:00.000Z", "end_at": "2027-04-14T03:15:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Tokyo Station", "start_lat": 35.6812, "start_lng": 139.7671,
+      "end_location_name": "Kyoto Station", "end_lat": 34.9858, "end_lng": 135.7588,
+      "estimated_cost": 130, "metadata": { "ticket_info": "Reserved seats, car 7" }
+    },
+    {
+      "id": "demo-stay-kyoto", "trip_id": "demo-trip", "type": "stay", "title": "Kyoto Machiya Inn",
+      "day": "2027-04-14", "position": 2000,
+      "start_at": "2027-04-14T06:00:00.000Z", "end_at": "2027-04-17T01:00:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Kyoto Machiya Inn", "start_address": "Gion, Higashiyama Ward, Kyoto",
+      "start_lat": 35.0037, "start_lng": 135.7756,
+      "estimated_cost": 480, "metadata": { "room": "Tatami room" }
+    },
+    {
+      "id": "demo-fushimi", "trip_id": "demo-trip", "type": "activity", "title": "Fushimi Inari Shrine",
+      "day": "2027-04-15", "position": 1000,
+      "start_at": "2027-04-14T22:30:00.000Z", "end_at": "2027-04-15T01:00:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Fushimi Inari Shrine", "start_lat": 34.9671, "start_lng": 135.7727,
+      "estimated_cost": 0, "metadata": { "category": "activity" }
+    },
+    {
+      "id": "demo-kaiseki", "trip_id": "demo-trip", "type": "activity", "title": "Kaiseki dinner in Gion",
+      "day": "2027-04-15", "position": 2000,
+      "start_at": "2027-04-15T09:30:00.000Z", "end_at": "2027-04-15T11:30:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "Asia/Tokyo",
+      "start_location_name": "Gion Kaiseki", "start_lat": 35.0036, "start_lng": 135.7752,
+      "estimated_cost": 120, "status": "reserved", "payment_status": "unpaid",
+      "confirmation_number": "GION-0415", "metadata": { "category": "restaurant" }
+    },
+    {
+      "id": "demo-flight-home", "trip_id": "demo-trip", "type": "flight", "title": "Osaka KIX to Los Angeles",
+      "day": "2027-04-17", "position": 1000,
+      "start_at": "2027-04-17T09:00:00.000Z", "end_at": "2027-04-17T18:30:00.000Z",
+      "start_timezone": "Asia/Tokyo", "end_timezone": "America/Los_Angeles",
+      "start_location_name": "Osaka Kansai (KIX)", "start_lat": 34.432, "start_lng": 135.2304,
+      "end_location_name": "Los Angeles (LAX)", "end_lat": 33.9416, "end_lng": -118.4085,
+      "estimated_cost": 640, "status": "reserved", "payment_status": "unpaid",
+      "confirmation_number": "JL9X4B", "metadata": { "airline": "Japan Airlines", "flight_number": "JL61" }
+    }
+  ]
+}

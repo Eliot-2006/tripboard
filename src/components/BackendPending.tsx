@@ -6,11 +6,16 @@ export function BackendPending({ title }: { title: string }) {
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
       <h1 className="text-2xl font-semibold">{title}</h1>
       <p className="text-muted-foreground">
-        Accounts aren&apos;t connected yet. This page will work once the backend is added.
+        Accounts aren&apos;t connected yet. The demo trip works without signing in.
       </p>
-      <Link href="/" className={buttonVariants()}>
-        Back to home
-      </Link>
+      <div className="flex flex-wrap justify-center gap-3">
+        <Link href="/demo" className={buttonVariants()}>
+          Try the demo
+        </Link>
+        <Link href="/" className={buttonVariants({ variant: "outline" })}>
+          Back to home
+        </Link>
+      </div>
     </main>
   );
 }

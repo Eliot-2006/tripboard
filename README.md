@@ -2,7 +2,9 @@
 
 A travel planning web app: one trip workspace with a day-by-day itinerary, a map companion and a budget summary.
 
-**Status: skeleton.** The project structure, data model types, pure logic modules and UI shells are in place. There is no backend, no demo and no working trip screen yet.
+**Status: skeleton with a working demo.** `/demo` runs the trip workspace end to end on a seeded, in-memory trip (Japan 2027): day-by-day itinerary, item details, date range filter and budget summary. Changes reset on refresh. Accounts, the database, forms, drag and drop and the real map are not built yet, so `/login`, `/signup` and `/trips` are placeholders that point to the demo.
+
+Still open in the demo before it meets its P0 criteria: editing and drag and drop (DEMO-2, ITIN-5, ITIN-6), Edit and Delete in the detail card (ITIN-3), the mobile bottom sheet (ITIN-3, UX-2) and the real map (MAP-1 to MAP-8). Item details currently expand inline under the selected item on every screen size.
 
 ## Run
 
@@ -10,16 +12,18 @@ A travel planning web app: one trip workspace with a day-by-day itinerary, a map
     npm run dev        # http://localhost:3000
     npm test           # Vitest
     npm run e2e        # Playwright (starts the dev server)
+    npx next typegen   # generates route types (e.g. LayoutProps) so `tsc --noEmit` passes before a build
 
 `npm test` currently has 6 intentionally failing tests in `src/lib/map/path.test.ts`. They are the checklist for map path building (milestone M4).
 
 ## Layout
 
     docs/                       product docs (overview, PRD, technical) and design/plan notes
-    e2e/                        Playwright tests
-    src/app/                    routes (landing, login, signup, trips are placeholders)
+    e2e/                        Playwright tests (landing, placeholders, demo flows)
+    supabase/seed/demo-trip.json  the demo trip, sparse (omitted columns default via itemDefaults)
+    src/app/                    routes: landing, /demo; login, signup and trips are placeholders
     src/components/             UI shells: trip, itinerary, budget, map, plus shadcn primitives in ui/
-    src/lib/data/               Repository interface, provider, query hooks, shared contract test
+    src/lib/data/               Repository interface, in-memory DemoRepository, provider, query hooks, shared contract test
     src/lib/{time,budget,ordering,map}/   pure, tested logic (no date, money or ordering math in components)
     src/stores/                 selected item and date range
     src/test/                   test factories
