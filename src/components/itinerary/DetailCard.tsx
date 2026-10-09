@@ -2,15 +2,22 @@ import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/budget";
 import { formatDateTime } from "@/lib/time";
 import type { Item } from "@/types";
-import { locationLabel, PAYMENT_LABEL, STATUS_LABEL, TYPE_LABEL } from "./labels";
+import { kindLabel, locationLabel, PAYMENT_LABEL, STATUS_LABEL } from "./labels";
 
-type Props = { id: string; item: Item; currency: string; onClose: () => void };
+type Props = {
+  id: string;
+  item: Item;
+  currency: string;
+  onClose: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+};
 
-export function DetailCard({ id, item, currency, onClose }: Props) {
+export function DetailCard({ id, item, currency, onClose, onEdit, onDelete }: Props) {
   const startTz = item.start_timezone ?? "UTC";
   const money = (n: number | null) => (n === null ? null : formatMoney(n, currency));
   const rows: [string, string | null][] = [
-    ["Type", TYPE_LABEL[item.type]],
+    ["Type", kindLabel(item)],
     ["Starts", item.is_flexible || !item.start_at ? "Anytime" : formatDateTime(item.start_at, startTz)],
     ["Ends", item.end_at ? formatDateTime(item.end_at, item.end_timezone ?? startTz) : null],
     ["Location", locationLabel(item)],
@@ -43,6 +50,14 @@ export function DetailCard({ id, item, currency, onClose }: Props) {
         )}
       </dl>
       {!hasPin && <p className="mt-3 text-sm text-muted-foreground">No map location</p>}
+      <div className="mt-4 flex gap-2">
+        <Button variant="outline" className="min-h-11" onClick={onEdit}>
+          Edit
+        </Button>
+        <Button variant="outline" className="min-h-11 text-destructive hover:text-destructive" onClick={onDelete}>
+          Delete
+        </Button>
+      </div>
     </section>
   );
 }

@@ -24,7 +24,8 @@ test("demo loads without login and shows the banner and budget (DEMO-1, DEMO-3, 
 
 test("shows every trip day, the empty state and the Anytime label (ITIN-1, ITIN-9, ITEM-5)", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /^Day \d+ · / })).toHaveCount(9);
-  await expect(page.getByText("Nothing planned yet. Add something.")).toHaveCount(2);
+  await expect(page.getByText("Nothing planned yet.")).toHaveCount(2);
+  await expect(page.getByRole("button", { name: "Add something" })).toHaveCount(2);
   await expect(page.getByRole("button", { name: /Explore Akihabara/ })).toContainText("Anytime");
 });
 

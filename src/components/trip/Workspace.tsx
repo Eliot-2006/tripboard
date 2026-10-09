@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import { DateRangeControl } from "@/components/itinerary/DateRangeControl";
+import { DeleteItemDialog } from "@/components/itinerary/DeleteItemDialog";
+import { ItemDialog, type ItemEditor } from "@/components/itinerary/ItemDialog";
 import { Itinerary } from "@/components/itinerary/Itinerary";
 import { LazyMap } from "@/components/map/LazyMap";
 import { TripHeader } from "@/components/trip/TripHeader";
@@ -12,6 +14,7 @@ import { visibleItems } from "@/lib/ordering";
 import { daysBetween } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/stores/workspace";
+import type { Item } from "@/types";
 
 export function Workspace({ tripId }: { tripId: string }) {
   const trip = useTrip(tripId);
@@ -19,7 +22,12 @@ export function Workspace({ tripId }: { tripId: string }) {
   const range = useWorkspace((s) => s.range);
   const selectedId = useWorkspace((s) => s.selectedItemId);
   const select = useWorkspace((s) => s.select);
+  const setRange = useWorkspace((s) => s.setRange);
   const [view, setView] = useState<"itinerary" | "map">("itinerary");
+  const [editor, setEditor] = useState<ItemEditor | null>(null);
+  const [deleting, setDeleting] = useState<Item | null>(null);
+  // Read out by screen readers after an add, edit or delete (the list changes silently otherwise).
+  const [announcement, setAnnouncement] = useState("");
 
   // Drop a selection the date range hides, so widening the range later doesn't reopen it unasked.
   const selectedItem = items.data?.find((i) => i.id === selectedId);
@@ -46,9 +54,18 @@ export function Workspace({ tripId }: { tripId: string }) {
   const visible = visibleItems(all, effective);
   const days = daysBetween(effective.start, effective.end);
 
+  // Show what was just saved: select it, and widen the range or leave the map view if they would hide it.
+  const showSaved = (item: Item, added: boolean) => {
+    setEditor(null);
+    setAnnouncement(`${added ? "Added" : "Saved"} “${item.title}”`);
+    if (item.day < effective.start || item.day > effective.end) setRange(null);
+    setView("itinerary");
+    select(item.id);
+  };
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4">
-      <TripHeader trip={t} />
+      <TripHeader trip={t} onAdd={() => setEditor({ mode: "add", day: effective.start })} />
       {/* Budget counts every item in the trip, not just the visible range (PRD 4.6). */}
       <BudgetSummary items={all} totalBudget={t.total_budget} currency={t.currency} />
       <DateRangeControl trip={t} />
@@ -76,12 +93,31 @@ export function Workspace({ tripId }: { tripId: string }) {
             currency={t.currency}
             selectedId={selectedId}
             onSelect={select}
+            onAdd={(day) => setEditor({ mode: "add", day })}
+            onEdit={(item) => setEditor({ mode: "edit", item })}
+            onDelete={setDeleting}
           />
         </section>
         <section aria-label="Map" className={cn(view === "itinerary" && "hidden lg:block")}>
           <LazyMap items={visible} />
         </section>
       </div>
+
+      <ItemDialog trip={t} items={all} editor={editor} onClose={() => setEditor(null)} onSaved={showSaved} />
+      <DeleteItemDialog
+        tripId={t.id}
+        item={deleting}
+        onClose={() => setDeleting(null)}
+        onDeleted={(item) => {
+          setDeleting(null);
+          select(null);
+          setAnnouncement(`Deleted “${item.title}”`);
+        }}
+        afterDeleteFocus={(item) => document.getElementById(`day-${item.day}`)}
+      />
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
     </div>
   );
 }

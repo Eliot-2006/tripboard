@@ -20,7 +20,7 @@ export function useItems(tripId: string) {
   return useQuery({ queryKey: keys.items(tripId), queryFn: () => repo.getItems(tripId) });
 }
 
-function useItemsMutation<V>(tripId: string, run: (repo: Repository, vars: V) => Promise<unknown>) {
+function useItemsMutation<V, R>(tripId: string, run: (repo: Repository, vars: V) => Promise<R>) {
   const repo = useRepository();
   const qc = useQueryClient();
   return useMutation({
