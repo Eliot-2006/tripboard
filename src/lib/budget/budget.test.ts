@@ -52,6 +52,7 @@ describe("formatMoney", () => {
   it("formats whole and negative amounts", () => {
     expect(formatMoney(1816, "USD")).toBe("$1,816");
     expect(formatMoney(-60, "USD")).toBe("-$60");
-    expect(formatMoney(12.5, "USD")).toBe("$12.5");
+    expect(formatMoney(12.5, "USD")).toBe("$12.50");
+    expect(formatMoney(2985.5, "USD")).toBe("$2,985.50");
   });
 });
