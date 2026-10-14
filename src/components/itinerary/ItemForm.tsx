@@ -14,7 +14,7 @@ import {
   type ItemFormValues,
 } from "@/lib/items/form";
 import { timeZoneOptions } from "@/lib/time";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 import type { ItemType, Trip } from "@/types";
 import { PAYMENT_LABEL, STATUS_LABEL } from "./labels";
 

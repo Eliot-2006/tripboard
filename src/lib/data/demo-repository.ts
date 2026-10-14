@@ -1,10 +1,8 @@
 import { sortItems } from "@/lib/ordering";
-import { shiftItemToDay } from "@/lib/time";
-import { ItemSchema, NewItemSchema, NewTripSchema, TripSchema } from "@/types/schemas";
-import type { Item, ItemPatch, NewItem, NewTrip, Trip } from "@/types";
+import { ItemSchema, NewItemSchema } from "@/types/schemas";
+import type { Item, ItemPatch, NewItem, Trip } from "@/types";
 import type { Repository } from "./repository";
 
-const DEMO_USER = "demo-user";
 const now = () => new Date().toISOString();
 // Undefined patch keys mean "leave as is", matching how a database update treats omitted columns.
 const defined = <T extends object>(patch: T): Partial<T> =>
@@ -32,33 +30,9 @@ export class DemoRepository implements Repository {
     return i;
   }
 
-  async getTrips() {
-    return structuredClone(this.trips);
-  }
-
   async getTrip(id: string) {
     const trip = this.trips.find((t) => t.id === id);
     return trip ? structuredClone(trip) : null;
-  }
-
-  async createTrip(input: NewTrip) {
-    const data = NewTripSchema.parse(input);
-    const stamp = now();
-    const trip: Trip = { ...data, id: crypto.randomUUID(), user_id: DEMO_USER, created_at: stamp, updated_at: stamp };
-    this.trips.push(trip);
-    return structuredClone(trip);
-  }
-
-  async updateTrip(id: string, patch: Partial<NewTrip>) {
-    const i = this.tripIndex(id);
-    const next = TripSchema.parse({ ...this.trips[i], ...defined(patch), updated_at: now() });
-    this.trips[i] = next;
-    return structuredClone(next);
-  }
-
-  async deleteTrip(id: string) {
-    this.trips = this.trips.filter((t) => t.id !== id);
-    this.items = this.items.filter((x) => x.trip_id !== id);
   }
 
   async getItems(tripId: string) {
@@ -84,10 +58,5 @@ export class DemoRepository implements Repository {
 
   async deleteItem(id: string) {
     this.items = this.items.filter((x) => x.id !== id);
-  }
-
-  async moveItem(id: string, day: string, position: number) {
-    const item = this.items[this.itemIndex(id)];
-    return this.updateItem(id, { day, position, ...shiftItemToDay(item, day) });
   }
 }

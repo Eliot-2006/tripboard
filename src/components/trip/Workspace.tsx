@@ -1,42 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import { DateRangeControl } from "@/components/itinerary/DateRangeControl";
 import { DeleteItemDialog } from "@/components/itinerary/DeleteItemDialog";
 import { ItemDialog, type ItemEditor } from "@/components/itinerary/ItemDialog";
 import { Itinerary } from "@/components/itinerary/Itinerary";
-import { LazyMap } from "@/components/map/LazyMap";
-import { TripHeader } from "@/components/trip/TripHeader";
+import { MapPanel } from "@/components/map/MapPanel";
+import { GUTTER, TripHeader } from "@/components/trip/TripHeader";
 import { Button } from "@/components/ui/button";
 import { useItems, useTrip } from "@/lib/data/hooks";
 import { visibleItems } from "@/lib/ordering";
 import { daysBetween } from "@/lib/time";
-import { cn } from "@/lib/utils";
-import { useWorkspace } from "@/stores/workspace";
+import { cn } from "cn";
 import type { Item } from "@/types";
+
+export type Range = { start: string; end: string } | null;
 
 export function Workspace({ tripId }: { tripId: string }) {
   const trip = useTrip(tripId);
   const items = useItems(tripId);
-  const range = useWorkspace((s) => s.range);
-  const selectedId = useWorkspace((s) => s.selectedItemId);
-  const select = useWorkspace((s) => s.select);
-  const setRange = useWorkspace((s) => s.setRange);
+  const [range, setRawRange] = useState<Range>(null);
+  const [selectedId, select] = useState<string | null>(null);
   const [view, setView] = useState<"itinerary" | "map">("itinerary");
   const [editor, setEditor] = useState<ItemEditor | null>(null);
   const [deleting, setDeleting] = useState<Item | null>(null);
   // Read out by screen readers after an add, edit or delete (the list changes silently otherwise).
   const [announcement, setAnnouncement] = useState("");
 
-  // Drop a selection the date range hides, so widening the range later doesn't reopen it unasked.
-  const selectedItem = items.data?.find((i) => i.id === selectedId);
-  const tripRange = trip.data ? (range ?? { start: trip.data.start_date, end: trip.data.end_date }) : null;
-  const selectionHidden =
-    selectedItem !== undefined && tripRange !== null && visibleItems([selectedItem], tripRange).length === 0;
-  useEffect(() => {
-    if (selectionHidden) select(null);
-  }, [selectionHidden, select]);
+  // An inverted range is swapped, not emptied. A selection the new range hides is dropped, so widening the
+  // range later doesn't reopen it unasked.
+  const setRange = (r: Range) => {
+    const next = r && r.start > r.end ? { start: r.end, end: r.start } : r;
+    setRawRange(next);
+    const day = items.data?.find((i) => i.id === selectedId)?.day;
+    if (next && day && (day < next.start || day > next.end)) select(null);
+  };
 
   if (trip.isPending || items.isPending) return <p role="status" className="p-6">Loading trip…</p>;
   if (trip.isError || items.isError) {
@@ -64,13 +63,15 @@ export function Workspace({ tripId }: { tripId: string }) {
   };
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 p-4">
-      <TripHeader trip={t} onAdd={() => setEditor({ mode: "add", day: effective.start })} />
-      {/* Budget counts every item in the trip, not just the visible range (PRD 4.6). */}
-      <BudgetSummary items={all} totalBudget={t.total_budget} currency={t.currency} />
-      <DateRangeControl trip={t} />
+    <div className="flex flex-1 flex-col">
+      <TripHeader trip={t} days={days} onAdd={() => setEditor({ mode: "add", day: effective.start })} />
+      <div className={cn("flex flex-wrap items-end justify-between gap-x-10 gap-y-5 border-b py-5", GUTTER)}>
+        {/* Budget counts every item in the trip, not just the visible range (PRD 4.6). */}
+        <BudgetSummary items={all} totalBudget={t.total_budget} currency={t.currency} className="min-w-0 flex-1 basis-[28rem]" />
+        <DateRangeControl trip={t} range={range} onChange={setRange} />
+      </div>
 
-      <div role="group" aria-label="View" className="flex gap-2 lg:hidden">
+      <div role="group" aria-label="View" className={cn("flex gap-2 pt-4 lg:hidden", GUTTER)}>
         {(["itinerary", "map"] as const).map((v) => (
           <Button
             key={v}
@@ -84,8 +85,12 @@ export function Workspace({ tripId }: { tripId: string }) {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section aria-label="Itinerary" className={cn("flex flex-col gap-4", view === "map" && "hidden lg:flex")}>
+      {/* Edge to edge: the map takes the larger share as the screen widens, and stays in view while the days scroll. */}
+      <div className="grid flex-1 lg:grid-cols-2 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] 2xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <section
+          aria-label="Itinerary"
+          className={cn("py-6 lg:border-r", GUTTER, view === "map" && "hidden lg:block")}
+        >
           <Itinerary
             tripStart={t.start_date}
             days={days}
@@ -98,8 +103,11 @@ export function Workspace({ tripId }: { tripId: string }) {
             onDelete={setDeleting}
           />
         </section>
-        <section aria-label="Map" className={cn(view === "itinerary" && "hidden lg:block")}>
-          <LazyMap items={visible} />
+        <section
+          aria-label="Map"
+          className={cn("py-6 lg:sticky lg:top-0 lg:h-dvh", GUTTER, view === "itinerary" && "hidden lg:block")}
+        >
+          <MapPanel items={visible} days={days} tripStart={t.start_date} selectedId={selectedId} />
         </section>
       </div>
 

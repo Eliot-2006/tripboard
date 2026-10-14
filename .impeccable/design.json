@@ -1,0 +1,493 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-14T07:54:48.714Z",
+  "title": "Design System: Tripboard",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Signage Ink",
+        "canonical": "#121417",
+        "oklch": "oklch(19.0% 0.007 258.4)",
+        "tonalRamp": [
+          "#090b0e",
+          "#24272a",
+          "#434549",
+          "#64666a",
+          "#87898d",
+          "#abaeb2",
+          "#cbced2",
+          "#eceff3"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#cecece",
+          "#eeeeee"
+        ]
+      },
+      "signage-muted": {
+        "role": "neutral",
+        "displayName": "Sign Silver",
+        "canonical": "#b9bec4",
+        "oklch": "oklch(79.9% 0.010 252.8)",
+        "tonalRamp": [
+          "#080b0f",
+          "#23272b",
+          "#41454a",
+          "#62676c",
+          "#858a8f",
+          "#a9aeb4",
+          "#c9ced4",
+          "#eaeff5"
+        ]
+      },
+      "muted-ink": {
+        "role": "neutral",
+        "displayName": "Timetable Grey",
+        "canonical": "#5b616a",
+        "oklch": "oklch(49.1% 0.016 258.4)",
+        "tonalRamp": [
+          "#070b12",
+          "#22272e",
+          "#40454e",
+          "#606770",
+          "#838a93",
+          "#a8aeb8",
+          "#c7ced9",
+          "#e8effa"
+        ]
+      },
+      "seam": {
+        "role": "neutral",
+        "displayName": "Seam",
+        "canonical": "#d9dcdf",
+        "oklch": "oklch(89.3% 0.005 247.9)",
+        "tonalRamp": [
+          "#090b0d",
+          "#242729",
+          "#434548",
+          "#646669",
+          "#87898c",
+          "#abaeb1",
+          "#cbced1",
+          "#eceff2"
+        ]
+      },
+      "field-stroke": {
+        "role": "neutral",
+        "displayName": "Field Stroke",
+        "canonical": "#c9cdd1",
+        "oklch": "oklch(84.6% 0.007 247.9)",
+        "tonalRamp": [
+          "#090b0e",
+          "#24272a",
+          "#424549",
+          "#63666a",
+          "#868a8d",
+          "#aaaeb2",
+          "#caced2",
+          "#ebeff3"
+        ]
+      },
+      "platform-grey": {
+        "role": "neutral",
+        "displayName": "Platform Grey",
+        "canonical": "#eceeeb",
+        "oklch": "oklch(94.7% 0.005 134.9)",
+        "tonalRamp": [
+          "#0a0c0a",
+          "#252725",
+          "#444643",
+          "#656764",
+          "#888a87",
+          "#adaeac",
+          "#cccecb",
+          "#edefec"
+        ]
+      },
+      "wash": {
+        "role": "neutral",
+        "displayName": "Concourse Wash",
+        "canonical": "#f3f4f2",
+        "oklch": "oklch(96.6% 0.003 128.5)",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#262725",
+          "#444544",
+          "#656665",
+          "#888988",
+          "#adaeac",
+          "#cdcecc",
+          "#eeefed"
+        ]
+      },
+      "signal-red": {
+        "role": "neutral",
+        "displayName": "Signal Red",
+        "canonical": "#b42318",
+        "oklch": "oklch(50.0% 0.182 29.5)",
+        "tonalRamp": [
+          "#260000",
+          "#550000",
+          "#870000",
+          "#b7271c",
+          "#e25242",
+          "#ff8574",
+          "#ffaf9f",
+          "#ffd8cb"
+        ]
+      },
+      "day-1-blue": {
+        "role": "tertiary",
+        "displayName": "Day 1 Blue",
+        "canonical": "#0072B2",
+        "oklch": "oklch(53.2% 0.131 244.0)",
+        "tonalRamp": [
+          "#000b27",
+          "#002853",
+          "#004882",
+          "#006bab",
+          "#3390d2",
+          "#68b6f3",
+          "#97d5ff",
+          "#c5f5ff"
+        ]
+      },
+      "day-2-orange": {
+        "role": "tertiary",
+        "displayName": "Day 2 Orange",
+        "canonical": "#E69F00",
+        "oklch": "oklch(75.3% 0.158 76.8)",
+        "tonalRamp": [
+          "#1d0300",
+          "#441900",
+          "#6e3400",
+          "#975400",
+          "#bd7900",
+          "#dea13b",
+          "#f6c47a",
+          "#ffe8b0"
+        ]
+      },
+      "day-3-bluish-green": {
+        "role": "tertiary",
+        "displayName": "Day 3 Bluish Green",
+        "canonical": "#009E73",
+        "oklch": "oklch(62.0% 0.130 165.5)",
+        "tonalRamp": [
+          "#001304",
+          "#00341a",
+          "#005834",
+          "#007c54",
+          "#0ca176",
+          "#5bc59c",
+          "#90e2bf",
+          "#c1ffe3"
+        ]
+      },
+      "day-4-reddish-purple": {
+        "role": "tertiary",
+        "displayName": "Day 4 Reddish Purple",
+        "canonical": "#CC79A7",
+        "oklch": "oklch(67.9% 0.118 346.3)",
+        "tonalRamp": [
+          "#1d0011",
+          "#440d30",
+          "#6e2552",
+          "#954774",
+          "#bc6a98",
+          "#e091bc",
+          "#f9b7da",
+          "#ffdcf8"
+        ]
+      },
+      "day-5-vermillion": {
+        "role": "tertiary",
+        "displayName": "Day 5 Vermillion",
+        "canonical": "#D55E00",
+        "oklch": "oklch(62.1% 0.170 47.5)",
+        "tonalRamp": [
+          "#240000",
+          "#500100",
+          "#811800",
+          "#af3a00",
+          "#d86108",
+          "#f68f58",
+          "#ffb68b",
+          "#ffdebd"
+        ]
+      },
+      "day-6-sky-blue": {
+        "role": "tertiary",
+        "displayName": "Day 6 Sky Blue",
+        "canonical": "#56B4E9",
+        "oklch": "oklch(73.5% 0.117 236.2)",
+        "tonalRamp": [
+          "#000d24",
+          "#002a4d",
+          "#004b7a",
+          "#006ea0",
+          "#3193c6",
+          "#64b8e9",
+          "#94d7ff",
+          "#c3f7ff"
+        ]
+      },
+      "day-7-olive": {
+        "role": "tertiary",
+        "displayName": "Day 7 Olive",
+        "canonical": "#B8A100",
+        "oklch": "oklch(70.8% 0.147 99.0)",
+        "tonalRamp": [
+          "#140900",
+          "#342400",
+          "#584300",
+          "#7c6500",
+          "#a08900",
+          "#c2af43",
+          "#decf7e",
+          "#fbf0b3"
+        ]
+      },
+      "day-8-grey": {
+        "role": "tertiary",
+        "displayName": "Day 8 Grey",
+        "canonical": "#6B6B6B",
+        "oklch": "oklch(52.8% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#cecece",
+          "#eeeeee"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Landing statement on the signage band; 36/48/72px across base/sm/lg."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Trip name on the band and page titles; 36px to 48px."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Day headings beside their route bullets."
+      },
+      "station": {
+        "displayName": "Station",
+        "purpose": "Itinerary item titles."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Budget figures, tabular."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Places, times, detail rows, controls."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Budget term labels and badge text."
+      }
+    },
+    "shadows": [
+      {
+        "name": "modal-lift",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Dialog and alert-dialog popups over the 30% black scrim only; the page itself is flat."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-150",
+        "value": "150ms ease",
+        "purpose": "Hover fills, dialog fade and slide (translate-y 16px on the sheet, scale 0.95 on the alert)."
+      },
+      {
+        "name": "station-select",
+        "value": "background-color, scale 150ms",
+        "purpose": "Station fills with ink and scales to 125% when selected."
+      },
+      {
+        "name": "press",
+        "value": "translateY(1px)",
+        "purpose": "Button press nudge."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      },
+      {
+        "name": "2xl",
+        "value": "1536px"
+      }
+    ],
+    "openGaps": [
+      "Dark mode (PRD UX-5, P1) is not designed.",
+      "The schematic route diagram is a stand-in; the real map (milestone M4) replaces it."
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink on paper; also the pressed state of toggles.",
+      "html": "<button class=\"ds-btn-primary\">Whole trip</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid transparent;font:500 14px/1 Archivo,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:all .15s;background:var(--primary,#121417);color:var(--primary-foreground,#fff);} .ds-btn-primary:hover{background:color-mix(in srgb,#121417 80%,transparent);} .ds-btn-primary:focus-visible{outline:none;border-color:#121417;box-shadow:0 0 0 2px #121417;} .ds-btn-primary:active{transform:translateY(1px);}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Paper with a seam border; Edit, Add something, unpressed toggles.",
+      "html": "<button class=\"ds-btn-outline\">Edit</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid transparent;font:500 14px/1 Archivo,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:all .15s;background:#fff;color:#121417;border-color:#d9dcdf;} .ds-btn-outline:hover{background:#f3f4f2;} .ds-btn-outline:focus-visible{outline:none;border-color:#121417;box-shadow:0 0 0 2px #121417;} .ds-btn-outline:active{transform:translateY(1px);}"
+    },
+    {
+      "name": "Delete Button",
+      "kind": "button",
+      "refersTo": "button-delete",
+      "description": "Ghost in Signal Red, set at the far end of its row away from Edit.",
+      "html": "<button class=\"ds-btn-delete\">Delete</button>",
+      "css": ".ds-btn-delete{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid transparent;font:500 14px/1 Archivo,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:all .15s;background:transparent;color:#b42318;} .ds-btn-delete:hover{background:color-mix(in srgb,#b42318 10%,transparent);} .ds-btn-delete:focus-visible{outline:none;border-color:#121417;box-shadow:0 0 0 2px #121417;} .ds-btn-delete:active{transform:translateY(1px);}"
+    },
+    {
+      "name": "Signage Band",
+      "kind": "nav",
+      "refersTo": "signage-band",
+      "description": "The black sign band: condensed trip name, facts, inverted button, and the day strip map.",
+      "html": "<header class=\"ds-band\"><div class=\"ds-band-top\"><div><h1 class=\"ds-band-name\">Japan 2027</h1><p class=\"ds-band-facts\">Sat, Apr 10 to Sun, Apr 18 · 9 days · Tokyo, Kyoto</p></div><button class=\"ds-band-btn\">Add to trip</button></div><ol class=\"ds-strip\"><li><a class=\"ds-strip-bullet\" style=\"background:#0072B2;color:#fff\" href=\"#\">1</a><span class=\"ds-strip-seg\" style=\"background:#0072B2\"></span></li><li><a class=\"ds-strip-bullet\" style=\"background:#E69F00;color:#121417\" href=\"#\">2</a><span class=\"ds-strip-seg\" style=\"background:#E69F00\"></span></li><li><a class=\"ds-strip-bullet\" style=\"background:#009E73;color:#121417\" href=\"#\">3</a></li></ol></header>",
+      "css": ".ds-band{background:#121417;color:#fff;padding:24px 32px 20px;font-family:Archivo,ui-sans-serif,system-ui,sans-serif;} .ds-band-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px;} .ds-band-name{margin:0;font-size:48px;line-height:1;font-weight:600;letter-spacing:-0.025em;font-stretch:condensed;} .ds-band-facts{margin:8px 0 0;font-size:14px;color:#b9bec4;font-variant-numeric:tabular-nums;} .ds-band-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid transparent;font:500 14px/1 Archivo,ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:all .15s;background:#fff;color:#121417;} .ds-band-btn:hover{background:rgb(255 255 255/.85);} .ds-band-btn:focus-visible{outline:2px solid #fff;outline-offset:2px;} .ds-strip{display:flex;list-style:none;margin:20px 0 0;padding:0;} .ds-strip li{display:flex;flex:1;align-items:center;} .ds-strip li:last-child{flex:none;} .ds-strip-bullet{display:flex;width:32px;height:32px;margin:6px;border-radius:9999px;align-items:center;justify-content:center;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 0 0 2px #121417;transition:transform .15s;position:relative;z-index:1;} .ds-strip-bullet:hover{transform:scale(1.1);} .ds-strip-bullet:focus-visible{outline:2px solid #fff;outline-offset:4px;} .ds-strip-seg{flex:1;height:4px;min-width:16px;margin:0 -12px;}"
+    },
+    {
+      "name": "Station Row",
+      "kind": "custom",
+      "description": "An itinerary item as a station on its day's line; the second row shows the selected state.",
+      "html": "<div class=\"ds-line\" style=\"--line:#009E73\"><button class=\"ds-station\"><span class=\"ds-stn-mark\"></span><span class=\"ds-stn-time\">9:00 AM</span><span class=\"ds-stn-body\"><span class=\"ds-stn-title\">Senso-ji Temple</span><span class=\"ds-stn-place\">Senso-ji Temple</span><span class=\"ds-badge\">Planned</span></span><span class=\"ds-stn-cost\"></span></button><button class=\"ds-station is-selected\"><span class=\"ds-stn-mark\"></span><span class=\"ds-stn-time\">2:00 PM</span><span class=\"ds-stn-body\"><span class=\"ds-stn-title\">teamLab Planets</span><span class=\"ds-stn-place\">teamLab Planets</span><span><span class=\"ds-badge\">Reserved</span> <span class=\"ds-badge ds-badge-paid\">Paid</span></span></span><span class=\"ds-stn-cost\">$35</span></button></div>",
+      "css": ".ds-line{position:relative;font-family:Archivo,ui-sans-serif,system-ui,sans-serif;color:#121417;} .ds-line::before{content:\"\";position:absolute;left:12px;top:0;bottom:0;width:4px;background:var(--line);} .ds-station{position:relative;display:grid;grid-template-columns:28px 88px minmax(0,1fr) auto;gap:0 12px;width:100%;min-height:44px;padding:12px 12px 12px 0;border:0;border-radius:4.8px;background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:background-color .15s;} .ds-station:hover{background:#f3f4f2;} .ds-station:focus-visible{outline:2px solid #121417;outline-offset:2px;} .ds-station.is-selected::before{content:\"\";position:absolute;inset:0 0 0 32px;border-radius:4.8px;box-shadow:inset 0 0 0 2px #121417;pointer-events:none;} .ds-stn-mark{position:relative;z-index:1;justify-self:center;margin-top:5px;width:14px;height:14px;box-sizing:border-box;border-radius:9999px;border:3px solid var(--line);background:#fff;transition:scale .15s,background-color .15s;} .is-selected .ds-stn-mark{border-color:#121417;background:#121417;scale:1.25;} .ds-stn-time{font-size:14px;color:#5b616a;font-variant-numeric:tabular-nums;padding-top:2px;} .ds-stn-body{display:flex;flex-direction:column;gap:6px;min-width:0;} .ds-stn-title{font-size:17px;line-height:24px;font-weight:600;font-stretch:condensed;} .ds-stn-place{font-size:14px;color:#5b616a;} .ds-stn-cost{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;padding-top:2px;} .ds-badge{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:9999px;background:#eceeeb;color:#121417;font-size:12px;font-weight:500;width:fit-content;} .ds-badge-paid{background:#121417;color:#fff;}"
+    },
+    {
+      "name": "Day Heading",
+      "kind": "custom",
+      "refersTo": "route-bullet",
+      "description": "Numbered route bullet in the day's ink beside the condensed date.",
+      "html": "<h2 class=\"ds-day\"><span class=\"ds-day-bullet\" style=\"background:#0072B2;color:#fff\">1</span>Sat, Apr 10</h2>",
+      "css": ".ds-day{display:flex;align-items:center;gap:12px;margin:0;font:600 20px/1.25 Archivo,ui-sans-serif,system-ui,sans-serif;letter-spacing:-0.025em;font-stretch:condensed;color:#121417;} .ds-day-bullet{display:flex;width:28px;height:28px;border-radius:9999px;align-items:center;justify-content:center;font-size:14px;font-weight:700;letter-spacing:0;font-stretch:normal;font-variant-numeric:tabular-nums;}"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "Status pill in Platform Grey; Paid in ink.",
+      "html": "<span class=\"ds-chip\">Reserved</span> <span class=\"ds-chip ds-chip-paid\">Paid</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:9999px;background:#eceeeb;color:#121417;font:500 12px/1 Archivo,ui-sans-serif,system-ui,sans-serif;} .ds-chip-paid{background:#121417;color:#fff;}"
+    },
+    {
+      "name": "Select Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Native select / input: Field Stroke border, ink focus ring, 44px.",
+      "html": "<select class=\"ds-input\" aria-label=\"From day\"><option>Sat, Apr 10</option><option>Sun, Apr 11</option></select>",
+      "css": ".ds-input{min-height:44px;padding:8px 12px;border:1px solid #c9cdd1;border-radius:4.8px;background:#fff;color:#121417;font:400 14px Archivo,ui-sans-serif,system-ui,sans-serif;font-variant-numeric:tabular-nums;outline:none;transition:border-color .15s;} .ds-input:focus-visible{border-color:#121417;box-shadow:0 0 0 2px #121417;} .ds-input[aria-invalid=true]{border-color:#b42318;}"
+    },
+    {
+      "name": "Budget Meter",
+      "kind": "card",
+      "description": "Figures in condensed tabular semibold over a pill meter: paid in ink, still to pay at 35% ink.",
+      "html": "<div class=\"ds-budget\"><dl><div><dt>Total budget</dt><dd>$3,000</dd></div><div><dt>Paid</dt><dd>$907</dd></div><div><dt>Remaining to pay</dt><dd>$2,033</dd></div></dl><div class=\"ds-meter\"><span style=\"width:30%\"></span><span style=\"width:68%\"></span></div></div>",
+      "css": ".ds-budget{font-family:Archivo,ui-sans-serif,system-ui,sans-serif;color:#121417;display:flex;flex-direction:column;gap:12px;} .ds-budget dl{display:flex;flex-wrap:wrap;gap:12px 32px;margin:0;} .ds-budget dt{font-size:12px;color:#5b616a;} .ds-budget dd{margin:2px 0 0;font-size:20px;line-height:1.25;font-weight:600;font-stretch:condensed;font-variant-numeric:tabular-nums;} .ds-meter{display:flex;height:6px;border-radius:9999px;overflow:hidden;background:#eceeeb;} .ds-meter span:first-child{background:#121417;} .ds-meter span:last-child{background:rgb(18 20 23/.35);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Line Diagram",
+    "overview": "Tripboard draws a trip the way Beck and Vignelli drew a metro: each day is a colored line, each plan a station on it, and the whole thing hangs off a black subway-sign band that carries the trip's name in white. The field is white paper with near-black ink. Hairline seams divide regions instead of shadows or tinted cards, and color is flat, never modulated. Every hue on the page is meaningful. The Okabe-Ito inks belong to days. Ink belongs to text, selection and flights. Red is kept for Delete.\n\nThe layout runs full-bleed. The itinerary reads as a timetable column next to a line with stations. On large screens a sticky route diagram fills the other half at full viewport height and takes the bigger share as the screen widens. Density is high but regular: every day block has the same structure and the same scale, so a nine-day trip scans like a printed line map. Hierarchy comes from scale contrast within one family, Archivo, set condensed for names and with tabular figures for times and money.\n\nOpen, not designed yet: dark mode (PRD UX-5, P1). The route diagram is a schematic stand-in. The real map (milestone M4) will replace it, and the stations, day inks and selection treatment described here should carry over to it.",
+    "keyCharacteristics": [
+      "White field, near-black ink, 1px hairline seams, no gradients.",
+      "One Okabe-Ito ink per day, shown as a round numbered route bullet with a 4px line running through its stations.",
+      "A black signage band for the trip or brand name, with white text and a white primary button on it.",
+      "Archivo throughout: semibold condensed for names, tabular figures for numbers.",
+      "Selection is a filled ink station plus a 2px ink outline. Flights are heavier ink interchange rings."
+    ],
+    "rules": [
+      {
+        "name": "The Lines Own the Color Rule",
+        "body": "Chromatic color appears only as a day's ink: bullets, line segments, station rims and route rows. Interface chrome (buttons, badges, meter, selection) stays ink, grey and paper. The only other hue is the text-selection tint, 22% day-1 blue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Never Alone Rule",
+        "body": "A day's ink always comes with its number in the bullet, and a station's state comes with a text badge. Color never carries meaning by itself.",
+        "section": "colors"
+      },
+      {
+        "name": "The Condensed Means Name Rule",
+        "body": "Condensed width is for proper names (trip, day, station, route) and money figures. Running text, controls and labels stay at normal width.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Clock Rule",
+        "body": "Every time, date range and amount uses `tabular-nums`, so columns of figures don't jitter.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Day Shape Rule",
+        "body": "Every day block has the same structure and scale whatever it contains: bullet, condensed date, line, stations. An empty day keeps its bullet and shows a dashed placeholder offering \"Add something\".",
+        "section": "layout"
+      },
+      {
+        "name": "The 44 Rule",
+        "body": "Every interactive target is at least 44px tall, including day bullets (44px hit area around a 32px disc), buttons, selects and station rows.",
+        "section": "layout"
+      },
+      {
+        "name": "The Seam Not Shadow Rule",
+        "body": "Separate regions with a 1px seam or a change of field (paper versus band), never a shadow. Shadows exist only on modals floating over the scrim.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** give every day exactly one ink from the day palette, by index, and repeat it on the bullet, the line, the station rims and the route row.",
+      "**Do** pair every bullet with its numeral (paper on day 1 and day 8, ink on the rest) and every state with a text badge.",
+      "**Do** set names in Archivo semibold condensed and every time or amount in tabular figures.",
+      "**Do** run bands full-bleed with the shared 16 / 24 / 32 / 48px gutter.",
+      "**Do** keep interactive targets at 44px minimum.",
+      "**Do** put the trip or brand name in white on the black signage band at the top of every surface."
+    ],
+    "donts": [
+      "**Don't** use shadows or gradients on the page. Divide with 1px seams. The modal over its scrim is the only lifted layer.",
+      "**Don't** use a day ink for interface chrome, and don't introduce a hue that isn't a day ink, ink, grey or Signal Red.",
+      "**Don't** put the itinerary in rounded grey cards inside a centered fixed-width column.",
+      "**Don't** let a day's structure or scale change with its content. Empty days keep their bullet and placeholder.",
+      "**Don't** put Delete next to Edit. It goes at the far end of the row in Signal Red.",
+      "**Don't** label the schematic diagram as a map of real geography."
+    ]
+  }
+}

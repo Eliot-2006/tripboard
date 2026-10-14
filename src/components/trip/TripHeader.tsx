@@ -1,29 +1,62 @@
 import { Button } from "@/components/ui/button";
-import { formatDay } from "@/lib/time";
+import { cn } from "cn";
+import { dayColor, dayTextColor } from "@/lib/map/colors";
+import { dayDiff, formatDay } from "@/lib/time";
 import type { Trip } from "@/types";
 
-type Props = { trip: Trip; onAdd: () => void };
+/** Side padding shared by every full-width band, growing with the screen. */
+export const GUTTER = "px-4 sm:px-6 lg:px-8 2xl:px-12";
 
-export function TripHeader({ trip, onAdd }: Props) {
-  const places = trip.destinations.length > 0 ? ` · ${trip.destinations.join(", ")}` : "";
+type Props = { trip: Trip; days: string[]; onAdd: () => void };
+
+/** The black band of a subway sign: trip name, dates, and a strip map of the days in view that jumps to each one. */
+export function TripHeader({ trip, days, onAdd }: Props) {
+  const length = dayDiff(trip.start_date, trip.end_date) + 1;
+  const facts = [
+    `${formatDay(trip.start_date)} to ${formatDay(trip.end_date)}`,
+    `${length} ${length === 1 ? "day" : "days"}`,
+    ...(trip.destinations.length > 0 ? [trip.destinations.join(", ")] : []),
+  ];
   return (
-    <header className="flex flex-wrap items-start justify-between gap-2">
-      <div>
-        <h1 className="text-2xl font-semibold">{trip.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {formatDay(trip.start_date)} to {formatDay(trip.end_date)}
-          {places}
-        </p>
-      </div>
-      <div className="flex gap-2">
-        {/* Editing trips arrives with accounts (TRIP-3). */}
-        <Button variant="outline" className="min-h-11" disabled>
-          Edit
-        </Button>
-        <Button className="min-h-11" onClick={onAdd}>
+    <header className="bg-signage text-signage-foreground">
+      <div className={cn("flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-6 pb-5", GUTTER)}>
+        <div className="min-w-0">
+          <h1 className="text-4xl leading-none font-semibold tracking-tight font-stretch-condensed sm:text-5xl">
+            {trip.name}
+          </h1>
+          <p className="mt-2 text-sm text-signage-muted tabular-nums">{facts.join(" · ")}</p>
+        </div>
+        {/* Editing the trip itself arrives with accounts (TRIP-3). */}
+        <Button className="min-h-11 bg-white px-4 text-foreground hover:bg-white/85" onClick={onAdd}>
           Add to trip
         </Button>
       </div>
+
+      <nav aria-label="Days" className={cn("overflow-x-auto pb-5", GUTTER)}>
+        <ol className="flex w-max min-w-full items-center">
+          {days.map((day) => {
+            const i = dayDiff(trip.start_date, day);
+            return (
+              // Each day's segment runs in its own ink to the next bullet, like the strip map over a train door.
+              <li key={day} className="group flex flex-1 items-center last:flex-none">
+                <a
+                  href={`#day-${day}`}
+                  aria-label={`Day ${i + 1} · ${formatDay(day)}`}
+                  className="flex size-11 items-center justify-center rounded-full outline-offset-2 focus-visible:outline-2 focus-visible:outline-white"
+                >
+                  <span
+                    className="flex size-8 items-center justify-center rounded-full text-sm font-bold tabular-nums ring-2 ring-signage transition-transform hover:scale-110"
+                    style={{ backgroundColor: dayColor(i), color: dayTextColor(i) }}
+                  >
+                    {i + 1}
+                  </span>
+                </a>
+                <span aria-hidden className="-mx-1.5 h-1 min-w-4 flex-1 group-last:hidden" style={{ backgroundColor: dayColor(i) }} />
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
     </header>
   );
 }

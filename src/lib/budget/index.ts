@@ -29,7 +29,7 @@ export function formatMoney(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    // Whole amounts stay short ($3,000); anything with cents shows both digits ($12.50).
+    trailingZeroDisplay: "stripIfInteger",
   }).format(amount);
 }

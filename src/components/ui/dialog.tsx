@@ -4,7 +4,6 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
 
 const Dialog = DialogPrimitive.Root
-const DialogClose = DialogPrimitive.Close
 
 /** Backdrop + popup in a portal. On phones it sits at the bottom of the screen, elsewhere it is centered. */
 function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
@@ -33,4 +32,4 @@ function DialogDescription({ className, ...props }: DialogPrimitive.Description.
   return <DialogPrimitive.Description className={cn("text-sm text-muted-foreground", className)} {...props} />
 }
 
-export { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle }
+export { Dialog, DialogContent, DialogDescription, DialogTitle }

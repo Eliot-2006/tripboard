@@ -35,9 +35,4 @@ export const useCreateItem = (tripId: string) =>
 export const useUpdateItem = (tripId: string) =>
   useItemsMutation(tripId, (r, v: { id: string; patch: ItemPatch }) => r.updateItem(v.id, v.patch));
 
-export const useMoveItem = (tripId: string) =>
-  useItemsMutation(tripId, (r, v: { id: string; day: string; position: number }) =>
-    r.moveItem(v.id, v.day, v.position),
-  );
-
 export const useDeleteItem = (tripId: string) => useItemsMutation(tripId, (r, id: string) => r.deleteItem(id));
