@@ -2,9 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeItem } from "@/test/factories";
 import {
   insertPositionByTime,
-  needsRenumber,
   positionBetween,
-  renumber,
   sortItems,
   visibleItems,
 } from "@/lib/ordering";
@@ -19,24 +17,6 @@ describe("positionBetween", () => {
   });
   it("starts an empty day at 1000", () => {
     expect(positionBetween(null, null)).toBe(1000);
-  });
-});
-
-describe("renumbering", () => {
-  it("detects gaps smaller than epsilon", () => {
-    expect(needsRenumber([1000, 1000.0000001])).toBe(true);
-    expect(needsRenumber([1000, 2000])).toBe(false);
-    expect(needsRenumber([])).toBe(false);
-  });
-  it("sorts and spaces positions evenly", () => {
-    const out = renumber([
-      { id: "a", position: 1000.0000001 },
-      { id: "b", position: 1000 },
-    ]);
-    expect(out).toEqual([
-      { id: "b", position: 1000 },
-      { id: "a", position: 2000 },
-    ]);
   });
 });
 

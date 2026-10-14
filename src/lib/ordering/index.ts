@@ -1,6 +1,5 @@
 import type { Item } from "@/types";
 
-export const EPSILON = 1e-6;
 const STEP = 1000;
 
 export function positionBetween(prev: number | null, next: number | null): number {
@@ -8,14 +7,6 @@ export function positionBetween(prev: number | null, next: number | null): numbe
   if (prev === null) return next! - STEP;
   if (next === null) return prev + STEP;
   return (prev + next) / 2;
-}
-
-export function needsRenumber(sortedPositions: number[]): boolean {
-  return sortedPositions.some((p, i) => i > 0 && p - sortedPositions[i - 1] < EPSILON);
-}
-
-export function renumber<T extends { position: number }>(items: T[]): T[] {
-  return [...items].sort((a, b) => a.position - b.position).map((it, i) => ({ ...it, position: (i + 1) * STEP }));
 }
 
 export function sortItems<T extends { day: string; position: number }>(items: T[]): T[] {

@@ -12,3 +12,8 @@ export const DAY_COLORS = [
 ] as const;
 
 export const dayColor = (dayIndex: number): string => DAY_COLORS[dayIndex % DAY_COLORS.length];
+
+// Numerals on a day's route bullet: white on the two dark inks, ink on the rest (each pair is at least 4.5:1).
+const ON_DAY = ["#FFFFFF", "#121417", "#121417", "#121417", "#121417", "#121417", "#121417", "#FFFFFF"] as const;
+
+export const dayTextColor = (dayIndex: number): string => ON_DAY[dayIndex % ON_DAY.length];

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DAY_COLORS, dayColor } from "@/lib/map/colors";
+import { DAY_COLORS, dayColor, dayTextColor } from "@/lib/map/colors";
 
 describe("dayColor", () => {
   it("has 8 distinct colors", () => {
@@ -10,5 +10,22 @@ describe("dayColor", () => {
     expect(dayColor(0)).toBe(DAY_COLORS[0]);
     expect(dayColor(8)).toBe(DAY_COLORS[0]);
     expect(dayColor(10)).toBe(DAY_COLORS[2]);
+  });
+});
+
+const luminance = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+describe("dayTextColor", () => {
+  it("is readable on every day color (at least 4.5:1)", () => {
+    DAY_COLORS.forEach((bg, i) => {
+      const [hi, lo] = [luminance(bg), luminance(dayTextColor(i))].sort((a, b) => b - a);
+      expect((hi + 0.05) / (lo + 0.05), bg).toBeGreaterThanOrEqual(4.5);
+    });
   });
 });

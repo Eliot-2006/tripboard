@@ -9,40 +9,40 @@ import type { BookingStatus, Item, ItemType, NewItem, PaymentStatus, Trip } from
  * fields (UX-4), and `formToItem` turns valid values into an item. Times are entered as local date + clock time
  * in a time zone and stored as UTC (technical doc §6).
  */
-export type ActivityCategory = "activity" | "restaurant";
-
-export type ItemFormValues = {
-  type: ItemType;
-  title: string;
+const FormShape = z.object({
+  type: ItemTypeSchema,
+  title: z.string(),
   /** "No exact time": only the day is saved (ITEM-5). */
-  is_flexible: boolean;
-  start_date: string;
-  start_time: string;
-  start_timezone: string;
+  is_flexible: z.boolean(),
+  start_date: z.string(),
+  start_time: z.string(),
+  start_timezone: z.string(),
   /** Flights and stays only. Activities end on their start date. */
-  end_date: string;
-  end_time: string;
+  end_date: z.string(),
+  end_time: z.string(),
   /** Flights only. Other types end in their start time zone. */
-  end_timezone: string;
-  start_location_name: string;
-  start_address: string;
-  start_lat: string;
-  start_lng: string;
+  end_timezone: z.string(),
+  start_location_name: z.string(),
+  start_address: z.string(),
+  start_lat: z.string(),
+  start_lng: z.string(),
   /** Flights (arrival) and activities that end somewhere else, such as a train ride. */
-  end_location_name: string;
-  end_address: string;
-  end_lat: string;
-  end_lng: string;
-  estimated_cost: string;
-  actual_cost: string;
-  status: BookingStatus;
-  payment_status: PaymentStatus;
-  confirmation_number: string;
-  notes: string;
-  airline: string;
-  flight_number: string;
-  category: ActivityCategory;
-};
+  end_location_name: z.string(),
+  end_address: z.string(),
+  end_lat: z.string(),
+  end_lng: z.string(),
+  estimated_cost: z.string(),
+  actual_cost: z.string(),
+  status: BookingStatusSchema,
+  payment_status: PaymentStatusSchema,
+  confirmation_number: z.string(),
+  notes: z.string(),
+  airline: z.string(),
+  flight_number: z.string(),
+  category: z.enum(["activity", "restaurant"]),
+});
+
+export type ItemFormValues = z.infer<typeof FormShape>;
 
 export const hasEndPlace = (type: ItemType) => type !== "stay";
 export const hasEndDate = (type: ItemType) => type !== "activity";
@@ -75,35 +75,6 @@ const zoneIssue = (input: string) => `We don't recognise “${input.trim()}”. 
 
 const END_LABEL: Record<ItemType, string> = { flight: "Arrival", stay: "Check-out", activity: "End" };
 const START_LABEL: Record<ItemType, string> = { flight: "departure", stay: "check-in", activity: "start" };
-
-const FormShape = z.object({
-  type: ItemTypeSchema,
-  title: z.string(),
-  is_flexible: z.boolean(),
-  start_date: z.string(),
-  start_time: z.string(),
-  start_timezone: z.string(),
-  end_date: z.string(),
-  end_time: z.string(),
-  end_timezone: z.string(),
-  start_location_name: z.string(),
-  start_address: z.string(),
-  start_lat: z.string(),
-  start_lng: z.string(),
-  end_location_name: z.string(),
-  end_address: z.string(),
-  end_lat: z.string(),
-  end_lng: z.string(),
-  estimated_cost: z.string(),
-  actual_cost: z.string(),
-  status: BookingStatusSchema,
-  payment_status: PaymentStatusSchema,
-  confirmation_number: z.string(),
-  notes: z.string(),
-  airline: z.string(),
-  flight_number: z.string(),
-  category: z.enum(["activity", "restaurant"]),
-});
 
 /** Validates form values for an item in `trip`. Every issue is reported on the field the user has to fix. */
 export function itemFormSchema(trip: Pick<Trip, "start_date" | "end_date">) {
