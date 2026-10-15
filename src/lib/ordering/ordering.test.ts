@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { loadDemoSeed } from "@/lib/data/demo-seed";
 import { makeItem } from "@/test/factories";
 import {
+  applyMove,
   insertPositionByTime,
+  planMove,
+  planMoveToDay,
   positionBetween,
   sortItems,
+  stayContinuations,
   visibleItems,
 } from "@/lib/ordering";
 
@@ -60,5 +65,94 @@ describe("insertPositionByTime", () => {
   });
   it("handles an empty day", () => {
     expect(insertPositionByTime([], "2027-04-10T09:00:00.000Z")).toBe(1000);
+  });
+});
+
+describe("planMove (ITIN-5, ITIN-6)", () => {
+  const day = [makeItem({ id: "a", position: 1000 }), makeItem({ id: "b", position: 2000 }), makeItem({ id: "c", position: 3000 })];
+
+  it("takes the midpoint of the new neighbours, changing only the moved item", () => {
+    expect(planMove("x", "2027-04-12", day, 1)).toEqual({ id: "x", day: "2027-04-12", position: 1500, renumber: [] });
+  });
+
+  it("goes before the first item, after the last, or into an empty day", () => {
+    expect(planMove("x", "d", day, 0).position).toBe(0);
+    expect(planMove("x", "d", day, 3).position).toBe(4000);
+    expect(planMove("x", "d", day, 99).position).toBe(4000);
+    expect(planMove("x", "d", [], 0).position).toBe(1000);
+  });
+
+  it("renumbers the day when the gap has collapsed", () => {
+    const tight = [makeItem({ id: "a", position: 1000 }), makeItem({ id: "b", position: 1000 + 1e-7 })];
+    expect(planMove("x", "d", tight, 1)).toEqual({
+      id: "x",
+      day: "d",
+      position: 2000,
+      renumber: [{ id: "b", position: 3000 }],
+    });
+  });
+});
+
+describe("planMoveToDay (ITIN-7)", () => {
+  it("places the item by its start time on the new day, keeping its clock time", () => {
+    const morning = makeItem({ id: "m", day: "2027-04-14", position: 1000, start_at: "2027-04-14T00:00:00.000Z" });
+    const evening = makeItem({ id: "e", day: "2027-04-14", position: 2000, start_at: "2027-04-14T10:00:00.000Z" });
+    const lunch = makeItem({
+      id: "l",
+      day: "2027-04-12",
+      start_at: "2027-04-12T03:00:00.000Z", // noon in Tokyo
+      start_timezone: "Asia/Tokyo",
+    });
+    expect(planMoveToDay(lunch, "2027-04-14", [morning, evening, lunch])).toEqual({
+      id: "l",
+      day: "2027-04-14",
+      position: 1500,
+      renumber: [],
+    });
+  });
+});
+
+describe("applyMove", () => {
+  it("moves the item, shifts its times to the new day, renumbers neighbours and keeps the order", () => {
+    const a = makeItem({ id: "a", day: "2027-04-12", position: 1000 });
+    const b = makeItem({
+      id: "b",
+      day: "2027-04-12",
+      position: 2000,
+      start_at: "2027-04-12T00:00:00.000Z",
+      start_timezone: "Asia/Tokyo",
+    });
+    const c = makeItem({ id: "c", day: "2027-04-13", position: 1000 });
+    const moved = applyMove([a, b, c], { id: "b", day: "2027-04-13", position: 500, renumber: [{ id: "c", position: 2000 }] });
+    expect(moved.map((i) => [i.id, i.day, i.position])).toEqual([
+      ["a", "2027-04-12", 1000],
+      ["b", "2027-04-13", 500],
+      ["c", "2027-04-13", 2000],
+    ]);
+    expect(moved[1].start_at).toBe("2027-04-13T00:00:00.000Z");
+    expect(b.day).toBe("2027-04-12"); // inputs untouched
+  });
+});
+
+describe("stayContinuations (ITIN-8)", () => {
+  const { items } = loadDemoSeed();
+  const days = ["2027-04-11", "2027-04-12", "2027-04-13", "2027-04-14", "2027-04-15", "2027-04-16", "2027-04-17"];
+
+  it("lists each stay on the nights between check-in and check-out", () => {
+    const titles = Object.fromEntries(Object.entries(stayContinuations(items, days)).map(([d, s]) => [d, s.map((i) => i.title)]));
+    expect(titles).toEqual({
+      "2027-04-11": [],
+      "2027-04-12": ["Hotel Gracery Shinjuku"],
+      "2027-04-13": ["Hotel Gracery Shinjuku"],
+      "2027-04-14": [],
+      "2027-04-15": ["Kyoto Machiya Inn"],
+      "2027-04-16": ["Kyoto Machiya Inn"],
+      "2027-04-17": [],
+    });
+  });
+
+  it("ignores stays without a check-out", () => {
+    const open = makeItem({ type: "stay", day: "2027-04-10", end_at: null });
+    expect(stayContinuations([open], ["2027-04-11"])).toEqual({ "2027-04-11": [] });
   });
 });

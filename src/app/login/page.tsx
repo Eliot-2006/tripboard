@@ -1,5 +1,8 @@
-import { BackendPending } from "@/components/BackendPending";
+import type { Metadata } from "next";
+import { AuthPage } from "@/components/auth/AuthPage";
+
+export const metadata: Metadata = { title: "Log in · Tripboard" };
 
 export default function LoginPage() {
-  return <BackendPending title="Log in" />;
+  return <AuthPage mode="login" />;
 }

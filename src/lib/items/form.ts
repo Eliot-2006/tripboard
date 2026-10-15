@@ -57,7 +57,7 @@ const blank = (s: string) => s.trim() === "";
 const orNull = (s: string) => (blank(s) ? null : s.trim());
 const parseNumber = (s: string) => (blank(s) ? null : Number(s.trim()));
 const isTime = (s: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
-const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+export const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 // Plain decimals only: Number() would also accept "0x10" or "1e2".
 const isDecimal = (s: string) => /^-?\d+(\.\d+)?$/.test(s.trim());
 

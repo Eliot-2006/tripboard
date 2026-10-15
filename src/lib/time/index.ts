@@ -102,8 +102,16 @@ export function formatDay(day: string): string {
   return utc(day).toFormat("ccc, LLL d");
 }
 
+export function formatDayWithYear(day: string): string {
+  return utc(day).toFormat("ccc, LLL d, yyyy");
+}
+
 export function dayDiff(from: string, to: string): number {
   return Math.round(utc(to).diff(utc(from), "days").days);
+}
+
+export function shiftDays(iso: string, tz: string, days: number): string {
+  return inZone(iso, tz).plus({ days }).toUTC().toISO()!;
 }
 
 export function daysBetween(start: string, end: string): string[] {
@@ -129,4 +137,26 @@ export function formatItemTime(item: CardTime): string {
   // Crossing the date line can land a flight on an earlier local day, shown as "−1".
   const shift = days === 0 ? "" : ` ${days > 0 ? "+" : "−"}${Math.abs(days)}`;
   return `${start} → ${formatTime(item.end_at, endTz)}${shift}`;
+}
+
+type Timed = Pick<Item, "is_flexible" | "start_at" | "end_at" | "start_timezone" | "end_timezone">;
+
+/**
+ * Times for an item moved to `day`: the clock time is kept and both ends shift by the same number of calendar days.
+ * Flexible or untimed items have no times to shift.
+ */
+export function shiftItemToDay(item: Timed, day: string): { start_at: string | null; end_at: string | null } {
+  if (item.is_flexible || !item.start_at) return { start_at: null, end_at: null };
+
+  const startTz = item.start_timezone ?? "UTC";
+  const delta = dayDiff(localDay(item.start_at, startTz), day);
+  const start_at = shiftDays(item.start_at, startTz, delta);
+  if (!item.end_at) return { start_at, end_at: null };
+
+  let end_at = shiftDays(item.end_at, item.end_timezone ?? startTz, delta);
+  // Zones with different DST rules, or a start in a DST gap, can invert a short item: keep its duration instead.
+  if (Date.parse(end_at) < Date.parse(start_at)) {
+    end_at = new Date(Date.parse(start_at) + (Date.parse(item.end_at) - Date.parse(item.start_at))).toISOString();
+  }
+  return { start_at, end_at };
 }

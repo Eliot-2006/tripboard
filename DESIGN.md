@@ -150,7 +150,7 @@ Tripboard draws a trip the way Beck and Vignelli drew a metro: each day is a col
 
 The layout runs full-bleed. The itinerary reads as a timetable column next to a line with stations. On large screens a sticky route diagram fills the other half at full viewport height and takes the bigger share as the screen widens. Density is high but regular: every day block has the same structure and the same scale, so a nine-day trip scans like a printed line map. Hierarchy comes from scale contrast within one family, Archivo, set condensed for names and with tabular figures for times and money.
 
-Open, not designed yet: dark mode (PRD UX-5, P1). The route diagram is a schematic stand-in. The real map (milestone M4) will replace it, and the stations, day inks and selection treatment described here should carry over to it.
+Open, not designed yet: dark mode (PRD UX-5, P1).
 
 **Key Characteristics:**
 - White field, near-black ink, 1px hairline seams, no gradients.
@@ -167,7 +167,7 @@ A colorless ink-on-paper field that hands all of its color to the day lines.
 - **Signage Ink** (ink): text, the primary button, the focus ring, the selected station and the signage band. Exposed as `--foreground`, `--primary`, `--ring` and `--signage`. A primary button is ink on paper. On the band the roles flip and the button is paper on ink.
 
 ### Tertiary
-- **The Day Inks** (day-1 to day-8): the Okabe-Ito color-blind-safe set, with yellow darkened to olive (day-7) and black replaced by grey (day-8) so they read on white. They cycle by day index and are defined once, in `src/lib/map/colors.ts`, as hex because the future map library can't read CSS tokens. Day 1 and day 8 bullets take paper numerals. The other six take ink numerals. Every pairing is at least 4.5:1.
+- **The Day Inks** (day-1 to day-8): the Okabe-Ito color-blind-safe set, with yellow darkened to olive (day-7) and black replaced by grey (day-8) so they read on white. They cycle by day index and are defined once, in `src/lib/map/colors.ts`, as hex because Leaflet can't read CSS tokens. Day 1 and day 8 bullets take paper numerals. The other six take ink numerals. Every pairing is at least 4.5:1.
 
 ### Neutral
 - **Paper** (paper): page background, cards, popovers, field fills, and the text on the band.
@@ -261,8 +261,8 @@ Quiet, ink-and-paper, and always 44px on the product surfaces.
 ### Station Row (signature)
 A full-width button for each itinerary item: a ring marker on the day line, then time, condensed title, an SVG icon with the place, badges, and the cost right-aligned in tabular semibold. Hover fills with the wash. When selected, the marker fills with ink and a 2px inset ink outline starts past the line. The line ends at the center of the last station.
 
-### Route Diagram (signature, schematic)
-An SVG that scales to its panel. Each day is a horizontal row of 8px round-capped stroke in its ink, alternating left-to-right and right-to-left, joined to the next row by a half-turn. A 20px numbered transfer ring marks where each day starts. Paper chevrons between stations show the direction of travel. Station labels are 15px muted-ink and turn bold ink when selected. Days with no stops are drawn as a dotted line. The header reads "Route · N stops in view" next to "Schematic until the map arrives". The diagram is hidden from screen readers because the itinerary lists every stop.
+### Map (signature)
+Leaflet, in the map column, under a header that reads "Map · N stops in view" next to a legend of numbered day bullets. Pins are 28px route bullets in the day's ink with the stop number, a 2px paper ring and no shadow. A selected pin grows to 34px and fills with ink, like a selected station. Lines between stops are 3px ink at 75%, and flights are dashed arcs. A stop that travels (a flight, a train) also marks its end with a small paper ring in the day's ink. The map frame is a 6px-radius hairline box.
 
 ### Budget Meter
 A 6px pill track in Platform Grey. Paid is a solid ink segment, and the remainder still to pay is 35% ink, both against the larger of the budget and the estimate. It repeats the figures above it and is hidden from assistive technology.
@@ -283,4 +283,3 @@ A 6px pill track in Platform Grey. Paid is a solid ink segment, and the remainde
 - **Don't** put the itinerary in rounded grey cards inside a centered fixed-width column.
 - **Don't** let a day's structure or scale change with its content. Empty days keep their bullet and placeholder.
 - **Don't** put Delete next to Edit. It goes at the far end of the row in Signal Red.
-- **Don't** label the schematic diagram as a map of real geography.

@@ -2,9 +2,9 @@
 
 A travel planning web app: one trip workspace with a day-by-day itinerary, a map companion and a budget summary.
 
-**Status: skeleton with a working demo.** `/demo` runs the trip workspace end to end on a seeded, in-memory trip (Japan 2027): day-by-day itinerary, item details, date range filter, budget summary, and adding, editing and deleting flights, stays and activities. Changes reset on refresh. Accounts, the database, drag and drop and the real map are not built yet, so `/login`, `/signup` and `/trips` are placeholders that point to the demo.
+**Status: working demo and accounts.** `/demo` runs the trip workspace end to end on a seeded, in-memory trip (Japan 2027): day-by-day itinerary, item details (a bottom sheet on phones), date range filter, budget summary, adding, editing and deleting flights, stays and activities, drag and drop within and between days (mouse, touch and keyboard) with a "Move to day" fallback, and a Leaflet map with numbered pins, route lines and flight arcs that stays in sync with the itinerary. Changes reset on refresh. Signed-in users get the same workspace on Supabase: sign up and log in with email and password, a trip list, and creating, editing and deleting trips. Row Level Security keeps every trip private to its owner.
 
-Still open in the demo before it meets its P0 criteria: drag and drop (DEMO-2, ITIN-5, ITIN-6), the mobile bottom sheet (ITIN-3, UX-2) and the real map (MAP-1 to MAP-8). Item details currently expand inline under the selected item on every screen size. Editing the trip itself (TRIP-3) arrives with accounts.
+Still open: deployment (M6), Google sign-in (AUTH-4, P1) and the other P1 items. Map tiles default to OpenStreetMap's standard tile server, which is fine for development but not for production traffic: set `NEXT_PUBLIC_MAP_TILE_URL` and `NEXT_PUBLIC_MAP_ATTRIBUTION` to a provider before deploying.
 
 ## Run
 
@@ -14,19 +14,23 @@ Still open in the demo before it meets its P0 criteria: drag and drop (DEMO-2, I
     npm run e2e        # Playwright (starts the dev server)
     npx next typegen   # generates route types (e.g. LayoutProps) so `tsc --noEmit` passes before a build
 
-`npm test` currently has 6 intentionally failing tests in `src/lib/map/path.test.ts`. They are the checklist for map path building (milestone M4).
+Copy `.env.example` to `.env.local` and fill in the Supabase project URL and publishable key (Project Settings → API Keys). Without them the demo still works, and the account pages say accounts are unavailable.
+
+The database schema lives in `supabase/migrations/`. `supabase/tests/rls_isolation.sql` checks that one user can't read or change another user's trips (AUTH-5): paste it into the Supabase SQL Editor, it rolls itself back. `npm test` also runs the repository contract against Supabase when `.env.local` has `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` for a dedicated test account (it deletes that account's trips afterwards), and skips it otherwise.
+
 
 ## Layout
 
     docs/                       product docs (overview, PRD, technical) and design/plan notes
-    e2e/                        Playwright tests (landing, placeholders, demo flows)
+    e2e/                        Playwright tests (landing, sign-in checks, demo flows)
     supabase/seed/demo-trip.json  the demo trip, sparse (omitted columns default via itemDefaults)
-    src/app/                    routes: landing, /demo; login, signup and trips are placeholders
+    src/app/                    routes: landing, /demo, /login, /signup, /trips, /trips/[tripId]
     src/components/             trip, itinerary (cards, details, item form and dialogs), budget, map; primitives in ui/
-    src/lib/data/               Repository interface, in-memory DemoRepository, provider, query hooks, shared contract test
+    src/lib/data/               Repository interface, in-memory DemoRepository, SupabaseRepository, provider, query hooks, shared contract test
+    src/lib/supabase/           Supabase clients for the browser and the server (src/proxy.ts refreshes the session)
+    supabase/migrations/        schema, constraints and Row Level Security
     src/lib/{time,budget,ordering,map}/   pure, tested logic (no date, money or ordering math in components)
     src/lib/items/              item form: validation, form <-> item conversion, placement, default time zone
-    src/stores/                 selected item and date range
     src/test/                   test factories
     src/types/                  Zod schemas and inferred types
 

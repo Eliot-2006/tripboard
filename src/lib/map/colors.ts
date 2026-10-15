@@ -17,3 +17,6 @@ export const dayColor = (dayIndex: number): string => DAY_COLORS[dayIndex % DAY_
 const ON_DAY = ["#FFFFFF", "#121417", "#121417", "#121417", "#121417", "#121417", "#121417", "#FFFFFF"] as const;
 
 export const dayTextColor = (dayIndex: number): string => ON_DAY[dayIndex % ON_DAY.length];
+
+/** Route lines between stops: the ink (--foreground), as hex for the same reason. */
+export const ROUTE_COLOR = "#121417";

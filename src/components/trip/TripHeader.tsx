@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
 import { dayColor, dayTextColor } from "@/lib/map/colors";
@@ -7,10 +8,10 @@ import type { Trip } from "@/types";
 /** Side padding shared by every full-width band, growing with the screen. */
 export const GUTTER = "px-4 sm:px-6 lg:px-8 2xl:px-12";
 
-type Props = { trip: Trip; days: string[]; onAdd: () => void };
+type Props = { trip: Trip; days: string[]; onAdd: () => void; onEdit: () => void; /** Links above the name, e.g. back to all trips. */ nav?: ReactNode };
 
 /** The black band of a subway sign: trip name, dates, and a strip map of the days in view that jumps to each one. */
-export function TripHeader({ trip, days, onAdd }: Props) {
+export function TripHeader({ trip, days, onAdd, onEdit, nav }: Props) {
   const length = dayDiff(trip.start_date, trip.end_date) + 1;
   const facts = [
     `${formatDay(trip.start_date)} to ${formatDay(trip.end_date)}`,
@@ -19,6 +20,7 @@ export function TripHeader({ trip, days, onAdd }: Props) {
   ];
   return (
     <header className="bg-signage text-signage-foreground">
+      {nav && <div className={cn("flex min-h-14 items-center justify-between gap-4 pt-2", GUTTER)}>{nav}</div>}
       <div className={cn("flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-6 pb-5", GUTTER)}>
         <div className="min-w-0">
           <h1 className="text-4xl leading-none font-semibold tracking-tight font-stretch-condensed sm:text-5xl">
@@ -26,10 +28,18 @@ export function TripHeader({ trip, days, onAdd }: Props) {
           </h1>
           <p className="mt-2 text-sm text-signage-muted tabular-nums">{facts.join(" · ")}</p>
         </div>
-        {/* Editing the trip itself arrives with accounts (TRIP-3). */}
-        <Button className="min-h-11 bg-white px-4 text-foreground hover:bg-white/85" onClick={onAdd}>
-          Add to trip
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="min-h-11 border-white/30 bg-transparent px-4 text-signage-foreground hover:bg-white/10 hover:text-signage-foreground"
+            onClick={onEdit}
+          >
+            Edit trip
+          </Button>
+          <Button className="min-h-11 bg-white px-4 text-foreground hover:bg-white/85" onClick={onAdd}>
+            Add to trip
+          </Button>
+        </div>
       </div>
 
       <nav aria-label="Days" className={cn("overflow-x-auto pb-5", GUTTER)}>
