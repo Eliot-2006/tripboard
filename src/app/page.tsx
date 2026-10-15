@@ -1,15 +1,20 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { loadDemoSeed } from "@/lib/data/demo-seed";
 import { dayColor, dayTextColor } from "@/lib/map/colors";
 import { sortItems } from "@/lib/ordering";
+import { currentUser } from "@/lib/supabase/server";
 import { daysBetween, formatDay } from "@/lib/time";
 import { cn } from "cn";
 
 const onDark = "min-h-11 px-5 text-base";
 
-export default function Home() {
+export default async function Home() {
+  // Signed-in travelers go straight to their trips. If accounts can't be reached, the landing page still works.
+  if ((await currentUser()).id) redirect("/trips");
+
   // The sample trip from /demo, drawn as a strip map: one bullet per day, its stops listed under it.
   const { trips, items } = loadDemoSeed();
   const trip = trips[0];

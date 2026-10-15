@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
 test("adds an activity from an empty day and updates the budget (ITEM-1, ITEM-4, ITIN-9, BUD-3)", async ({ page }) => {
   await day(page, 7).getByRole("button", { name: "Add something" }).click();
   await expect(dialog(page)).toContainText("What are you adding on Fri, Apr 16?");
-  await dialog(page).getByRole("button", { name: /^Activity/ }).click();
+  await dialog(page).getByRole("button", { name: /^(?!Move |\d+\. ).*Activity/ }).click();
   await dialog(page).getByLabel("Name", { exact: true }).fill("Nishiki Market");
   await dialog(page).getByLabel("Kind").selectOption("restaurant");
   await dialog(page).getByLabel("Start time", { exact: true }).fill("11:00");
@@ -28,7 +28,7 @@ test("adds an activity from an empty day and updates the budget (ITEM-1, ITEM-4,
   await dialog(page).getByRole("button", { name: "Add activity" }).click();
 
   await expect(dialog(page)).toHaveCount(0);
-  const card = day(page, 7).getByRole("button", { name: /Nishiki Market/ });
+  const card = day(page, 7).getByRole("button", { name: /^(?!Move |\d+\. ).*Nishiki Market/ });
   await expect(card).toContainText("11:00 AM");
   await expect(card).toHaveAttribute("aria-expanded", "true");
   await expectBudget(page, { "Estimated cost": "$2,990", "Budget remaining": "$10" });
@@ -39,7 +39,7 @@ test("adds an activity from an empty day and updates the budget (ITEM-1, ITEM-4,
 
 test("adds an overnight cross-time-zone flight, with zones typed as cities (ITEM-2)", async ({ page }) => {
   await page.getByRole("button", { name: "Add to trip" }).click();
-  await dialog(page).getByRole("button", { name: /^Flight/ }).click();
+  await dialog(page).getByRole("button", { name: /^(?!Move |\d+\. ).*Flight/ }).click();
   const d = dialog(page);
   await expect(d.getByLabel("Name", { exact: true })).toBeFocused();
   await d.getByLabel("Name", { exact: true }).fill("SFO to Osaka");
@@ -52,7 +52,7 @@ test("adds an overnight cross-time-zone flight, with zones typed as cities (ITEM
   await d.getByLabel("Arrival time zone").fill("tokyo");
   await d.getByRole("button", { name: "Add flight" }).click();
 
-  const card = day(page, 1).getByRole("button", { name: /SFO to Osaka/ });
+  const card = day(page, 1).getByRole("button", { name: /^(?!Move |\d+\. ).*SFO to Osaka/ });
   await expect(card).toContainText("1:00 PM → 5:30 PM +1");
   const details = day(page, 1).getByRole("region", { name: "Item details" });
   await expect(details).toContainText("Sat, Apr 10, 1:00 PM GMT-7");
@@ -63,17 +63,17 @@ test("adds an overnight cross-time-zone flight, with zones typed as cities (ITEM
 
 test("saves an item with no exact time as Anytime (ITEM-5)", async ({ page }) => {
   await day(page, 9).getByRole("button", { name: "Add something" }).click();
-  await dialog(page).getByRole("button", { name: /^Activity/ }).click();
+  await dialog(page).getByRole("button", { name: /^(?!Move |\d+\. ).*Activity/ }).click();
   await dialog(page).getByLabel("Name", { exact: true }).fill("Souvenir shopping");
   await dialog(page).getByLabel("No exact time").check();
   await expect(dialog(page).getByLabel("Start time", { exact: true })).toHaveCount(0);
   await dialog(page).getByRole("button", { name: "Add activity" }).click();
-  await expect(day(page, 9).getByRole("button", { name: /Souvenir shopping/ })).toContainText("Anytime");
+  await expect(day(page, 9).getByRole("button", { name: /^(?!Move |\d+\. ).*Souvenir shopping/ })).toContainText("Anytime");
 });
 
 test("shows errors next to the fields and saves nothing (UX-4)", async ({ page }) => {
   await page.getByRole("button", { name: "Add to trip" }).click();
-  await dialog(page).getByRole("button", { name: /^Stay/ }).click();
+  await dialog(page).getByRole("button", { name: /^(?!Move |\d+\. ).*Stay/ }).click();
   const d = dialog(page);
   await d.getByLabel("Estimated cost (USD)").fill("-20");
   await d.getByRole("button", { name: "Add stay" }).click();
@@ -97,11 +97,11 @@ test("shows errors next to the fields and saves nothing (UX-4)", async ({ page }
 
 test("asks before discarding typed changes, and keeps them when the type changes", async ({ page }) => {
   await page.getByRole("button", { name: "Add to trip" }).click();
-  await dialog(page).getByRole("button", { name: /^Activity/ }).click();
+  await dialog(page).getByRole("button", { name: /^(?!Move |\d+\. ).*Activity/ }).click();
   await dialog(page).getByLabel("Name", { exact: true }).fill("Tea ceremony");
 
   await dialog(page).getByRole("button", { name: "Not a activity? Change type" }).click();
-  await dialog(page).getByRole("button", { name: /^Stay/ }).click();
+  await dialog(page).getByRole("button", { name: /^(?!Move |\d+\. ).*Stay/ }).click();
   await expect(dialog(page).getByLabel("Name", { exact: true })).toHaveValue("Tea ceremony");
 
   page.once("dialog", (confirm) => confirm.dismiss());
@@ -114,7 +114,7 @@ test("asks before discarding typed changes, and keeps them when the type changes
 });
 
 test("edits an item: marking it paid reserves it and updates the budget (ITEM-6, ITEM-7)", async ({ page }) => {
-  await page.getByRole("button", { name: /Ramen at Ichiran/ }).click();
+  await page.getByRole("button", { name: /^(?!Move |\d+\. ).*Ramen at Ichiran/ }).click();
   await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Edit" }).click();
   const d = dialog(page);
   await expect(d.getByLabel("Name", { exact: true })).toHaveValue("Ramen at Ichiran Shinjuku");
@@ -125,7 +125,7 @@ test("edits an item: marking it paid reserves it and updates the budget (ITEM-6,
   await expect(d.getByRole("option", { name: "Planned" })).toBeDisabled();
   await d.getByRole("button", { name: "Save changes" }).click();
 
-  const card = page.getByRole("button", { name: /Ramen at Ichiran/ });
+  const card = page.getByRole("button", { name: /^(?!Move |\d+\. ).*Ramen at Ichiran/ });
   await expect(card).toContainText("Reserved");
   await expect(card).toContainText("Paid");
   await expectBudget(page, { Paid: "$925", "Remaining to pay": "$2,015" });
@@ -134,16 +134,16 @@ test("edits an item: marking it paid reserves it and updates the budget (ITEM-6,
 });
 
 test("editing the date moves the item to that day", async ({ page }) => {
-  await page.getByRole("button", { name: /Senso-ji Temple/ }).click();
+  await page.getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ }).click();
   await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Edit" }).click();
   await dialog(page).getByLabel("Start date").fill("2027-04-16");
   await dialog(page).getByRole("button", { name: "Save changes" }).click();
-  await expect(day(page, 3).getByRole("button", { name: /Senso-ji Temple/ })).toHaveCount(0);
-  await expect(day(page, 7).getByRole("button", { name: /Senso-ji Temple/ })).toContainText("9:00 AM");
+  await expect(day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toHaveCount(0);
+  await expect(day(page, 7).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toContainText("9:00 AM");
 });
 
 test("deletes an item only after confirming (ITEM-6)", async ({ page }) => {
-  const card = page.getByRole("button", { name: /Kaiseki dinner in Gion/ });
+  const card = page.getByRole("button", { name: /^(?!Move |\d+\. ).*Kaiseki dinner in Gion/ });
   await card.click();
   const details = page.getByRole("region", { name: "Item details" });
 

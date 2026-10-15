@@ -221,7 +221,7 @@ Free Supabase projects pause after a week of inactivity. V1 does not work around
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=   # sb_publishable_..., safe in the browser
 SUPABASE_SERVICE_ROLE_KEY=        # server only, never sent to the browser
 NEXT_PUBLIC_MAP_TILE_URL=         # tile provider URL with key if needed
 # V2

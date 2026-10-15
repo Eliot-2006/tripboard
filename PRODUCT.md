@@ -23,14 +23,14 @@ The itinerary is the product; the map is a companion kept in sync with it. Booki
 - Landing page leads to the demo; sign-up, log-in and trips pages are placeholders until accounts exist ("Accounts aren't connected yet").
 - The demo runs on an in-memory seeded trip ("Japan 2027", Apr 10 to 18, Tokyo and Kyoto) and resets on refresh.
 - Desktop: itinerary and map side by side (UX-1). Mobile: single column with an Itinerary/Map toggle, 44 px tap targets (UX-2).
-- The map is a placeholder until milestone M4 (Leaflet, numbered pins colored by day, connecting lines, flight arcs).
+- The map is Leaflet: numbered pins colored by day, connecting lines and flight arcs, in sync with the itinerary.
 
 ## Capabilities and Constraints
 
 - Next.js 16, React 19, Tailwind v4, base-ui primitives with shadcn-style components, lucide icons, Geist fonts.
 - Add, edit and delete items with field-level validation; dialogs (bottom sheet on phones); budget summary over the whole trip.
 - Day colors come from a fixed color-blind-safe palette of 8 (`src/lib/map/colors.ts`), shared by itinerary and map.
-- Not yet built: accounts, drag and drop, the real map, trip editing. Dark mode following system preference is a P1 requirement (UX-5), not yet implemented.
+- Not yet built: deployment, Google sign-in (P1). Dark mode following system preference is a P1 requirement (UX-5), not yet implemented.
 
 ## Brand Commitments
 

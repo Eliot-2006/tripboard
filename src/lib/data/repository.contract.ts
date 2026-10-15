@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { makeNewItem } from "@/test/factories";
-import type { Trip } from "@/types";
+import type { NewTrip, Trip } from "@/types";
 import type { Repository } from "./repository";
+
+const newTrip = (over: Partial<NewTrip> = {}): NewTrip => ({
+  name: "Contract trip",
+  start_date: "2027-04-10",
+  end_date: "2027-04-18",
+  destinations: [],
+  currency: "USD",
+  total_budget: null,
+  ...over,
+});
 
 /** `setup` returns a repository holding one trip with no items. */
 export function runRepositoryContract(name: string, setup: () => Promise<{ repo: Repository; trip: Trip }>) {
@@ -9,6 +19,33 @@ export function runRepositoryContract(name: string, setup: () => Promise<{ repo:
     it("reads a trip", async () => {
       const { repo, trip } = await setup();
       expect(await repo.getTrip(trip.id)).toEqual(trip);
+    });
+
+    it("creates, lists, updates and deletes trips", async () => {
+      const { repo } = await setup();
+      const trip = await repo.createTrip(newTrip({ destinations: ["Lisbon"], total_budget: 1200.5 }));
+      expect(await repo.getTrip(trip.id)).toEqual(trip);
+      expect((await repo.getTrips()).map((t) => t.id)).toContain(trip.id);
+
+      const renamed = await repo.updateTrip(trip.id, { name: "Renamed", total_budget: undefined });
+      expect(renamed.name).toBe("Renamed");
+      expect(renamed.total_budget).toBe(1200.5);
+
+      await repo.deleteTrip(trip.id);
+      expect(await repo.getTrip(trip.id)).toBeNull();
+    });
+
+    it("rejects a trip that ends before it starts", async () => {
+      const { repo } = await setup();
+      await expect(repo.createTrip(newTrip({ start_date: "2027-04-10", end_date: "2027-04-09" }))).rejects.toThrow();
+    });
+
+    it("deleting a trip deletes its items", async () => {
+      const { repo, trip } = await setup();
+      await repo.createItem(makeNewItem({ trip_id: trip.id }));
+      await repo.deleteTrip(trip.id);
+      expect(await repo.getTrip(trip.id)).toBeNull();
+      expect(await repo.getItems(trip.id)).toEqual([]);
     });
 
     it("returns null for an unknown trip", async () => {
@@ -44,9 +81,10 @@ export function runRepositoryContract(name: string, setup: () => Promise<{ repo:
       await expect(repo.updateItem(item.id, { payment_status: "paid" })).rejects.toThrow();
     });
 
-    it("rejects updates for unknown items", async () => {
+    it("rejects updates and moves for unknown items", async () => {
       const { repo } = await setup();
       await expect(repo.updateItem("nope", { title: "x" })).rejects.toThrow();
+      await expect(repo.moveItem("nope", "2027-04-11", 1000)).rejects.toThrow();
     });
 
     it("rejects moving an item to a trip that does not exist", async () => {
@@ -64,5 +102,23 @@ export function runRepositoryContract(name: string, setup: () => Promise<{ repo:
       expect(updated.notes).toBe("Bring cash");
     });
 
+    it("moveItem changes day and position and keeps the local clock time", async () => {
+      const { repo, trip } = await setup();
+      const item = await repo.createItem(
+        makeNewItem({
+          trip_id: trip.id,
+          day: "2027-04-12",
+          start_at: "2027-04-12T00:00:00.000Z",
+          end_at: "2027-04-12T02:00:00.000Z",
+          start_timezone: "Asia/Tokyo",
+          end_timezone: "Asia/Tokyo",
+        }),
+      );
+      const moved = await repo.moveItem(item.id, "2027-04-13", 500);
+      expect(moved.day).toBe("2027-04-13");
+      expect(moved.position).toBe(500);
+      expect(moved.start_at).toBe("2027-04-13T00:00:00.000Z");
+      expect(moved.end_at).toBe("2027-04-13T02:00:00.000Z");
+    });
   });
 }
