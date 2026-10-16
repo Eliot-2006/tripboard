@@ -13,10 +13,10 @@ export function DemoApp() {
 
   return (
     <>
-      <div role="note" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-b bg-muted px-4 py-2 text-sm">
-        <span>You&apos;re viewing sample data. Changes reset when you refresh.</span>
-        <Link href="/signup" className={buttonVariants({ size: "sm" })}>
-          Sign up to plan your own
+      <div role="note" className="flex items-center justify-between gap-3 border-b bg-muted px-4 py-1 text-xs sm:justify-center sm:gap-4 sm:text-sm">
+        <span>Sample data. Changes reset when you refresh.</span>
+        <Link href="/signup" className={buttonVariants({ size: "sm", className: "min-h-11 shrink-0 px-3 text-xs sm:text-[0.8rem]" })}>
+          Sign up<span className="sr-only sm:not-sr-only">&nbsp;to plan your own</span>
         </Link>
       </div>
       <RepositoryProvider repository={repository}>

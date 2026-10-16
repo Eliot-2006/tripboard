@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/input";
 import { daysBetween, formatDay } from "@/lib/time";
@@ -21,7 +22,7 @@ export function DateRangeControl({ trip, range, onChange: setRange }: { trip: Tr
       <Button
         variant={range ? "outline" : "default"}
         aria-pressed={!range}
-        className="min-h-11 px-4"
+        className={cn("min-h-11 px-4", !range && "max-sm:hidden")}
         onClick={() => setRange(null)}
       >
         Whole trip

@@ -28,7 +28,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { BedDouble, GripVertical } from "lucide-react";
+import { BedDouble, ChevronDown, GripVertical } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { dayColor, dayTextColor } from "@/lib/map/colors";
@@ -54,6 +54,7 @@ type Props = {
   onSelect: (id: string | null) => void;
   onAdd: (day: string) => void;
   onEdit: (item: Item) => void;
+  onDuplicate: (item: Item) => Promise<Item | null>;
   onDelete: (item: Item) => void;
   /** Drag and drop: put the item on `day` at `index` among that day's other items (ITIN-5, ITIN-6). */
   onMove: (item: Item, day: string, index: number) => void;
@@ -83,7 +84,7 @@ const instructions =
 
 export function Itinerary(props: Props) {
   const { tripStart, tripDays, days, items, staying, inlineDetails, currency, selectedId } = props;
-  const { onSelect, onAdd, onEdit, onDelete, onMove, onMoveToDay } = props;
+  const { onSelect, onAdd, onEdit, onDuplicate, onDelete, onMove, onMoveToDay } = props;
   const selectedCard = useRef<HTMLButtonElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<Item | null>(null);
@@ -101,7 +102,25 @@ export function Itinerary(props: Props) {
     refocus.current = null;
     row.querySelector<HTMLElement>(target.on === "handle" ? "[data-drag-handle]" : "[aria-expanded]")?.focus();
     row.scrollIntoView({ block: "nearest" });
-  }, [items]);
+  }, [items, selectedId]);
+
+  // Collapsed days are view-only state. Selecting an item (e.g. from the map) opens its day, set while rendering
+  // so the day is already open when the effect below scrolls to the item.
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const [seen, setSeen] = useState(selectedId);
+  if (selectedId !== seen) {
+    setSeen(selectedId);
+    const day = items.find((i) => i.id === selectedId)?.day;
+    if (day && collapsed.has(day)) setCollapsed((c) => new Set([...c].filter((d) => d !== day)));
+  }
+  const toggle = (day: string) => {
+    if (!collapsed.has(day) && items.some((item) => item.id === selectedId && item.day === day)) onSelect(null);
+    setCollapsed((c) => {
+      const next = new Set(c);
+      if (!next.delete(day)) next.add(day);
+      return next;
+    });
+  };
 
   // Bring a newly selected item and its details on screen, e.g. right after it is added or picked on the map.
   useEffect(() => {
@@ -212,82 +231,112 @@ export function Itinerary(props: Props) {
         {days.map((day) => {
           const dayIndex = dayDiff(tripStart, day);
           const list = dayItems(day);
+          const closed = collapsed.has(day);
+          const bodyId = `day-body-${day}`;
           return (
             <DaySection
               key={day}
               day={day}
               line={dayColor(dayIndex)}
-              empty={list.length === 0}
+              empty={list.length === 0 || closed}
               highlighted={dragging !== null && overDay === day && dragging.day !== day}
             >
-              {/* Focusable from script only: focus lands here after an item on this day is deleted. */}
-              <h2 id={`day-${day}`} tabIndex={-1} className="relative flex items-center gap-3 pb-1 outline-offset-4">
-                <span
-                  aria-hidden
-                  className="relative z-20 flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums"
-                  style={{ backgroundColor: dayColor(dayIndex), color: dayTextColor(dayIndex) }}
+              <h2 id={`day-${day}`} className="relative pb-1">
+                <button
+                  type="button"
+                  aria-expanded={!closed}
+                  aria-controls={bodyId}
+                  onClick={() => toggle(day)}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-2"
                 >
-                  {dayIndex + 1}
-                </span>
-                <span className="sr-only">{`Day ${dayIndex + 1} · `}</span>
-                <span className="text-xl font-semibold tracking-tight font-stretch-condensed">{formatDay(day)}</span>
-                {list.length > 0 && <span aria-hidden className={`${segment} top-1/2 bottom-0`} />}
+                  <span
+                    aria-hidden
+                    className="relative z-20 flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums"
+                    style={{ backgroundColor: dayColor(dayIndex), color: dayTextColor(dayIndex) }}
+                  >
+                    {dayIndex + 1}
+                  </span>
+                  <span id={`day-title-${day}`}>
+                    <span className="sr-only">{`Day ${dayIndex + 1} · `}</span>
+                    <span className="text-xl font-semibold tracking-tight font-stretch-condensed">{formatDay(day)}</span>
+                  </span>
+                  {closed && (
+                    <span className="text-sm text-muted-foreground">
+                      {list.length === 0 ? "Nothing planned" : `${list.length} ${list.length === 1 ? "item" : "items"}`}
+                    </span>
+                  )}
+                  <ChevronDown aria-hidden className={cn("ml-auto size-4 shrink-0 text-muted-foreground", !closed && "rotate-180")} />
+                </button>
+                {list.length > 0 && !closed && <span aria-hidden className={`${segment} top-1/2 bottom-0`} />}
               </h2>
-              {staying[day]?.map((stay) => (
-                <p key={stay.id} className="relative flex items-center gap-1.5 py-1.5 pl-10 text-sm text-muted-foreground">
-                  {list.length > 0 && <span aria-hidden className={`${segment} inset-y-0`} />}
-                  <BedDouble className="size-3.5 shrink-0" aria-hidden />
-                  Staying at {stay.title}
-                </p>
-              ))}
-              {list.length === 0 ? (
-                <div className="mt-2 ml-8 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
-                  <span>{dragging ? "Drop here to move it to this day." : "Nothing planned yet."}</span>
-                  <Button variant="outline" className="min-h-11 px-4" onClick={() => onAdd(day)}>
-                    Add something
-                  </Button>
-                </div>
-              ) : (
-                <SortableContext items={list.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                  <ul className="flex flex-col">
-                    {list.map((item) => (
-                      <SortableRow
-                        key={item.id}
-                        item={item}
-                        day={day}
-                        marker={marker?.id === item.id ? (marker.after ? "after" : "before") : null}
-                      >
-                        <ItemCard
-                          ref={item.id === selectedId ? selectedCard : undefined}
-                          item={item}
-                          currency={currency}
-                          selected={item.id === selectedId}
-                          onSelect={() => onSelect(item.id === selectedId ? null : item.id)}
-                          detailsId={`details-${item.id}`}
-                        />
-                        {/* Expanded card under the selection, so it opens where the user clicked (ITIN-3). */}
-                        {inlineDetails && item.id === selectedId && (
-                          <DetailCard
-                            id={`details-${item.id}`}
-                            item={item}
-                            currency={currency}
-                            days={tripDays}
-                            tripStart={tripStart}
-                            onClose={close}
-                            onEdit={() => onEdit(item)}
-                            onDelete={() => onDelete(item)}
-                            onMoveToDay={(d) => {
-                              refocus.current = { id: item.id, on: "card" };
-                              onMoveToDay(item, d);
-                            }}
-                          />
-                        )}
-                      </SortableRow>
+              <div id={bodyId}>
+                {!closed && (
+                  <>
+                    {staying[day]?.map((stay) => (
+                      <p key={stay.id} className="relative flex items-center gap-1.5 py-1.5 pl-10 text-sm text-muted-foreground">
+                        {list.length > 0 && <span aria-hidden className={`${segment} inset-y-0`} />}
+                        <BedDouble className="size-3.5 shrink-0" aria-hidden />
+                        Staying at {stay.title}
+                      </p>
                     ))}
-                  </ul>
-                  <EndSlot day={day} dragging={dragging !== null} />
-                </SortableContext>
-              )}
+                    {list.length === 0 ? (
+                      <div className="mt-2 ml-8 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                        <span>{dragging ? "Drop here to move it to this day." : "Nothing planned yet."}</span>
+                        <Button variant="outline" className="min-h-11 px-4" onClick={() => onAdd(day)}>
+                          Add something
+                        </Button>
+                      </div>
+                    ) : (
+                      <SortableContext items={list.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                        <ul className="flex flex-col">
+                          {list.map((item) => (
+                            <SortableRow
+                              key={item.id}
+                              item={item}
+                              day={day}
+                              marker={marker?.id === item.id ? (marker.after ? "after" : "before") : null}
+                            >
+                              <ItemCard
+                                ref={item.id === selectedId ? selectedCard : undefined}
+                                item={item}
+                                currency={currency}
+                                selected={item.id === selectedId}
+                                onSelect={() => onSelect(item.id === selectedId ? null : item.id)}
+                                detailsId={`details-${item.id}`}
+                              />
+                              {/* Expanded card under the selection, so it opens where the user clicked (ITIN-3). */}
+                              {inlineDetails && item.id === selectedId && (
+                                <DetailCard
+                                  id={`details-${item.id}`}
+                                  item={item}
+                                  currency={currency}
+                                  days={tripDays}
+                                  tripStart={tripStart}
+                                  onClose={close}
+                                  onEdit={() => onEdit(item)}
+                                  onDuplicate={() => {
+                                    void onDuplicate(item).then((copy) => {
+                                      if (!copy) return;
+                                      refocus.current = { id: copy.id, on: "card" };
+                                      onSelect(copy.id);
+                                    });
+                                  }}
+                                  onDelete={() => onDelete(item)}
+                                  onMoveToDay={(d) => {
+                                    refocus.current = { id: item.id, on: "card" };
+                                    onMoveToDay(item, d);
+                                  }}
+                                />
+                              )}
+                            </SortableRow>
+                          ))}
+                        </ul>
+                        <EndSlot day={day} dragging={dragging !== null} />
+                      </SortableContext>
+                    )}
+                  </>
+                )}
+              </div>
             </DaySection>
           );
         })}
@@ -315,7 +364,7 @@ function DaySection({ day, line, empty, highlighted, children }: DaySectionProps
   return (
     <section
       ref={setNodeRef}
-      aria-labelledby={`day-${day}`}
+      aria-labelledby={`day-title-${day}`}
       className={cn("relative scroll-mt-4 rounded-md", highlighted && "bg-muted ring-2 ring-foreground ring-offset-4")}
       style={{ "--line": line } as CSSProperties}
     >

@@ -10,7 +10,7 @@ export function AccountShell({ actions, children }: { actions?: ReactNode; child
       <div className={cn("flex min-h-16 items-center justify-between gap-4 bg-signage py-3 text-signage-foreground", GUTTER)}>
         <Link
           href="/"
-          className="text-xl font-bold tracking-tight font-stretch-condensed outline-offset-4 focus-visible:outline-2 focus-visible:outline-white"
+          className="text-xl font-bold tracking-tight font-stretch-condensed outline-offset-4 focus-visible:outline-2 focus-visible:outline-signage-foreground"
         >
           Tripboard
         </Link>

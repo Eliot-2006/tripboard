@@ -15,6 +15,7 @@ import {
   shiftDays,
   shiftItemToDay,
   timeZoneOptions,
+  toLocalParts,
 } from "@/lib/time";
 
 const LA = "America/Los_Angeles";
@@ -185,15 +186,15 @@ describe("resolveTimeZone", () => {
   });
 
   it("finds renamed cities whichever name the browser lists", () => {
-    for (const [city, offset] of [
-      ["Kolkata", "+5:30"],
-      ["Calcutta", "+5:30"],
-      ["Kyiv", "+3"],
-      ["Ho Chi Minh", "+7"],
+    for (const [city, clock] of [
+      ["Kolkata", "05:30"],
+      ["Calcutta", "05:30"],
+      ["Kyiv", "03:00"],
+      ["Ho Chi Minh", "07:00"],
     ]) {
       const zone = resolveTimeZone(city);
       expect(zone, city).not.toBeNull();
-      expect(formatDateTime("2027-07-01T00:00:00.000Z", zone!), city).toContain(`GMT${offset}`);
+      expect(toLocalParts("2027-07-01T00:00:00.000Z", zone!).time, city).toBe(clock);
     }
   });
 });
@@ -222,9 +223,11 @@ describe("nextDay", () => {
 });
 
 describe("formatDateTime", () => {
-  it("shows a GMT offset for every zone", () => {
-    expect(formatDateTime("2027-04-10T18:30:00.000Z", "America/Los_Angeles")).toBe("Sat, Apr 10, 11:30 AM GMT-7");
-    expect(formatDateTime("2027-04-11T06:45:00.000Z", "Asia/Tokyo")).toBe("Sun, Apr 11, 3:45 PM GMT+9");
+  it("names the place, not a GMT offset", () => {
+    expect(formatDateTime("2027-04-10T18:30:00.000Z", "America/Los_Angeles")).toBe("Sat, Apr 10, 11:30 AM Los Angeles time");
+    expect(formatDateTime("2027-04-11T06:45:00.000Z", "Asia/Tokyo")).toBe("Sun, Apr 11, 3:45 PM Tokyo time");
+    expect(formatDateTime("2027-04-11T06:45:00.000Z", "America/Argentina/Buenos_Aires")).toContain("Buenos Aires time");
+    expect(formatDateTime("2027-04-11T06:45:00.000Z", "UTC")).toBe("Sun, Apr 11, 6:45 AM UTC");
   });
 });
 

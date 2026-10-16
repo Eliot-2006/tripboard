@@ -9,7 +9,7 @@ const Dialog = DialogPrimitive.Root
 function DialogContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/30 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-[-webkit-touch-callout:none]:absolute" />
+      <DialogPrimitive.Backdrop className="fixed inset-0 z-50 min-h-dvh bg-black/30 dark:bg-black/60 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-[-webkit-touch-callout:none]:absolute" />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(

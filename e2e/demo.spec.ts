@@ -40,6 +40,7 @@ test("selecting an item opens its details and Close clears them (ITIN-3)", async
 });
 
 test("details expand under the item and a second click collapses them", async ({ page }) => {
+  test.skip(await page.getByRole("button", { name: "map", exact: true }).isVisible(), "Inline details are only shown in the desktop layout");
   const card = page.getByRole("button", { name: /^(?!Move |\d+\. ).*Kaiseki dinner in Gion/ });
   await card.click();
   const row = page.getByRole("listitem").filter({ has: card });
@@ -122,4 +123,29 @@ test("editing the trip warns before new dates leave items out (TRIP-3)", async (
   // The demo trip can't be deleted.
   await page.getByRole("button", { name: "Edit trip" }).click();
   await expect(page.getByRole("dialog").getByRole("button", { name: "Delete trip" })).toHaveCount(0);
+});
+
+test("shows a text warning, a negative remainder and the type breakdown when over budget (BUD-5, BUD-6)", async ({ page }) => {
+  const budget = page.getByRole("region", { name: "Budget summary" });
+  await expect(budget.getByText(/over budget/i)).toHaveCount(0);
+  await expect(budget).toContainText("Flights");
+  await expect(budget).toContainText("Stays");
+  await expect(budget).toContainText("Activities");
+
+  await page.getByRole("button", { name: /^(?!Move |\d+\. ).*Ramen at Ichiran/ }).click();
+  await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Edit" }).click();
+  await page.getByRole("dialog").getByLabel("Estimated cost (USD)").fill("300");
+  await page.getByRole("dialog").getByRole("button", { name: "Save changes" }).click();
+  await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Close" }).click();
+
+  await expect(budget.getByText(/^Over budget by \$\d/)).toBeVisible();
+  const remaining = budget.getByRole("term").filter({ hasText: /^Budget remaining$/ });
+  await expect(remaining.locator("xpath=following-sibling::dd[1]")).toHaveText(/^-\$\d/);
+});
+
+test("follows a dark system color scheme (UX-5)", async ({ page }) => {
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(await bg()).toBe("rgb(255, 255, 255)");
+  await page.emulateMedia({ colorScheme: "dark" });
+  expect(await bg()).toBe("rgb(13, 17, 23)");
 });
