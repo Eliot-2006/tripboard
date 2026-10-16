@@ -93,9 +93,10 @@ export function formatTime(iso: string, tz: string): string {
   return inZone(iso, tz).toFormat("h:mm a");
 }
 
+/** The date and clock time in `tz`, with the place named for people ("2:00 PM Tokyo time"), not a GMT offset. */
 export function formatDateTime(iso: string, tz: string): string {
-  // A GMT offset everywhere: abbreviations are only known for some zones (PDT, but GMT+9 for Tokyo).
-  return inZone(iso, tz).toFormat("ccc, LLL d, h:mm a 'GMT'Z");
+  const label = tz.toUpperCase() === "UTC" ? "UTC" : `${cityOf(tz)} time`;
+  return `${inZone(iso, tz).toFormat("ccc, LLL d, h:mm a")} ${label}`;
 }
 
 export function formatDay(day: string): string {

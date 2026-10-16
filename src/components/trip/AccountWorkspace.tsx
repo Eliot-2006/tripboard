@@ -17,7 +17,7 @@ export function AccountWorkspace({ tripId }: { tripId: string }) {
           <>
             <Link
               href="/trips"
-              className="flex min-h-11 items-center text-sm font-semibold text-signage-muted hover:text-signage-foreground focus-visible:outline-2 focus-visible:outline-white"
+              className="flex min-h-11 items-center text-sm font-semibold text-signage-muted hover:text-signage-foreground focus-visible:outline-2 focus-visible:outline-signage-foreground"
             >
               ← All trips
             </Link>

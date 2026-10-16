@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import { DateRangeControl } from "@/components/itinerary/DateRangeControl";
 import { DeleteItemDialog } from "@/components/itinerary/DeleteItemDialog";
@@ -11,10 +11,11 @@ import { Itinerary } from "@/components/itinerary/Itinerary";
 import { LazyMap } from "@/components/map/LazyMap";
 import { TripDialog, type TripEditor } from "@/components/trip/TripDialog";
 import { GUTTER, TripHeader } from "@/components/trip/TripHeader";
+import { TripLoading, TripMessage } from "@/components/trip/WorkspaceState";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useItems, useMoveItem, useTrip } from "@/lib/data/hooks";
-import { planMove, planMoveToDay, sortItems, stayContinuations, visibleItems, type Move } from "@/lib/ordering";
+import { useCreateItem, useItems, useMoveItem, useTrip } from "@/lib/data/hooks";
+import { duplicateOf, planMove, planMoveToDay, sortItems, stayContinuations, visibleItems, type Move } from "@/lib/ordering";
 import { daysBetween, formatDay } from "@/lib/time";
 import { cn } from "cn";
 import type { Item } from "@/types";
@@ -49,6 +50,9 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
     onFailed: (m) => setMoveError(`We couldn't move “${titleOf(m.id)}”, so it's back where it was. Please try again.`),
   });
 
+  const create = useCreateItem(tripId);
+  const duplicating = useRef(false);
+
   // An inverted range is swapped, not emptied. A selection the new range hides is dropped, so widening the
   // range later doesn't reopen it unasked.
   const setRange = (r: Range) => {
@@ -58,23 +62,38 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
     if (next && day && (day < next.start || day > next.end)) select(null);
   };
 
-  if (trip.isPending || items.isPending) return <p role="status" className="p-6">Loading trip…</p>;
+  if (trip.isPending || items.isPending) return <TripLoading />;
   if (trip.isError || items.isError) {
     return (
-      <p role="alert" className="p-6">
-        We couldn&apos;t load this trip. Please try again.
-      </p>
+      <TripMessage title="We couldn't load this trip">
+        <p className="text-muted-foreground">Check your connection and try again. Your trip is safe.</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            className="min-h-11 px-4"
+            onClick={() => {
+              void trip.refetch();
+              void items.refetch();
+            }}
+          >
+            Try again
+          </Button>
+          {/* NFR-6: if the database is down, the demo still works. */}
+          <Link href="/demo" className={buttonVariants({ variant: "outline", className: "min-h-11 px-4" })}>
+            Try the demo
+          </Link>
+        </div>
+      </TripMessage>
     );
   }
   if (!trip.data) {
     // Also what another user's trip looks like: Row Level Security hides it entirely (AUTH-5).
     return (
-      <div role="alert" className="flex flex-col items-start gap-3 p-6">
-        <p>We couldn&apos;t find this trip. It may have been deleted.</p>
+      <TripMessage title="We couldn't find this trip">
+        <p className="text-muted-foreground">It may have been deleted.</p>
         <Link href="/trips" className={buttonVariants({ className: "min-h-11 px-4" })}>
           Back to your trips
         </Link>
-      </div>
+      </TripMessage>
     );
   }
 
@@ -104,6 +123,23 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
   const moveTo = (item: Item, day: string, index: number) =>
     runMove(planMove(item.id, day, sortItems(all.filter((i) => i.day === day && i.id !== item.id)), index));
 
+  // The copy lands right after the original on the same day, so it is always in range.
+  const duplicate = async (item: Item) => {
+    if (duplicating.current) return null;
+    duplicating.current = true;
+    setMoveError(null);
+    try {
+      const copy = await create.mutateAsync(duplicateOf(item, all.filter((i) => i.day === item.day)));
+      setAnnouncement(`Duplicated “${copy.title}” on ${formatDay(copy.day)}`);
+      return copy;
+    } catch {
+      setMoveError(`We couldn't duplicate “${item.title}”. Please try again.`);
+      return null;
+    } finally {
+      duplicating.current = false;
+    }
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       <TripHeader
@@ -113,7 +149,7 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
         onAdd={() => setEditor({ mode: "add", day: effective.start })}
         onEdit={() => setTripEditor({ mode: "edit", trip: t, items: all })}
       />
-      <div className={cn("flex flex-wrap items-end justify-between gap-x-10 gap-y-5 border-b py-5", GUTTER)}>
+      <div className={cn("flex flex-wrap items-end justify-between gap-x-10 gap-y-3 border-b py-3 sm:gap-y-5 sm:py-5", GUTTER)}>
         {/* Budget counts every item in the trip, not just the visible range (PRD 4.6). */}
         <BudgetSummary items={all} totalBudget={t.total_budget} currency={t.currency} className="min-w-0 flex-1 basis-[28rem]" />
         <DateRangeControl trip={t} range={range} onChange={setRange} />
@@ -128,7 +164,7 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
         </div>
       )}
 
-      <div role="group" aria-label="View" className={cn("flex gap-2 pt-4 lg:hidden", GUTTER)}>
+      <div role="group" aria-label="View" className={cn("flex gap-2 pt-3 lg:hidden", GUTTER)}>
         {(["itinerary", "map"] as const).map((v) => (
           <Button
             key={v}
@@ -160,6 +196,7 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
             onSelect={select}
             onAdd={(day) => setEditor({ mode: "add", day })}
             onEdit={(item) => setEditor({ mode: "edit", item })}
+            onDuplicate={duplicate}
             onDelete={setDeleting}
             onMove={moveTo}
             onMoveToDay={(item, day) => runMove(planMoveToDay(item, day, all))}
@@ -180,6 +217,11 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
         tripStart={t.start_date}
         onClose={() => select(null)}
         onEdit={() => selectedItem && setEditor({ mode: "edit", item: selectedItem })}
+        onDuplicate={async () => {
+          if (!selectedItem) return;
+          const copy = await duplicate(selectedItem);
+          if (copy) select(copy.id);
+        }}
         onDelete={() => selectedItem && setDeleting(selectedItem)}
         onMoveToDay={(day) => selectedItem && runMove(planMoveToDay(selectedItem, day, all))}
       />
@@ -204,7 +246,8 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
           select(null);
           setAnnouncement(`Deleted “${item.title}”`);
         }}
-        afterDeleteFocus={(item) => document.getElementById(`day-${item.day}`)}
+        // Focus stays where the item was: its day's toggle.
+        afterDeleteFocus={(item) => document.getElementById(`day-${item.day}`)?.querySelector("button") ?? null}
       />
       <p role="status" className="sr-only">
         {announcement}

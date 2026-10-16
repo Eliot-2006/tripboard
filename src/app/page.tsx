@@ -31,7 +31,7 @@ export default async function Home() {
               Your whole trip in one place: a day-by-day itinerary with a map that shows every stop.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/demo" className={cn(buttonVariants(), onDark, "bg-white text-foreground hover:bg-white/85")}>
+              <Link href="/demo" className={cn(buttonVariants(), onDark, "bg-signage-foreground text-signage hover:bg-signage-foreground/85")}>
                 Try the demo
               </Link>
               <Link
@@ -39,14 +39,14 @@ export default async function Home() {
                 className={cn(
                   buttonVariants({ variant: "outline" }),
                   onDark,
-                  "border-white/30 bg-transparent text-signage-foreground hover:bg-white/10 hover:text-signage-foreground",
+                  "border-signage-foreground/30 bg-transparent text-signage-foreground hover:bg-signage-foreground/10 hover:text-signage-foreground",
                 )}
               >
                 Sign up
               </Link>
               <Link
                 href="/login"
-                className={cn(buttonVariants({ variant: "ghost" }), onDark, "text-signage-foreground hover:bg-white/10 hover:text-signage-foreground")}
+                className={cn(buttonVariants({ variant: "ghost" }), onDark, "text-signage-foreground hover:bg-signage-foreground/10 hover:text-signage-foreground")}
               >
                 Log in
               </Link>

@@ -64,6 +64,7 @@ export function MapPanel({ items, tripStart, selectedId, onSelect }: Props) {
             <Polyline
               key={i}
               positions={s.kind === "arc" ? arcPoints(s.from, s.to) : [s.from, s.to]}
+              className="tripboard-route"
               pathOptions={{ color: ROUTE_COLOR, weight: 3, opacity: 0.75, dashArray: s.kind === "arc" ? "6 6" : undefined }}
               interactive={false}
             />
@@ -74,6 +75,7 @@ export function MapPanel({ items, tripStart, selectedId, onSelect }: Props) {
                 key={`${s.item.id}-end`}
                 center={place(s.end)}
                 radius={5}
+                className="tripboard-ring"
                 pathOptions={{ color: s.color, fillColor: "#ffffff", fillOpacity: 1, weight: 3 }}
                 interactive={false}
               />

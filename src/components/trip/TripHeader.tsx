@@ -21,28 +21,32 @@ export function TripHeader({ trip, days, onAdd, onEdit, nav }: Props) {
   return (
     <header className="bg-signage text-signage-foreground">
       {nav && <div className={cn("flex min-h-14 items-center justify-between gap-4 pt-2", GUTTER)}>{nav}</div>}
-      <div className={cn("flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-6 pb-5", GUTTER)}>
+      <div className={cn("flex flex-wrap items-end justify-between gap-x-8 gap-y-3 pt-4 pb-3 sm:gap-y-4 sm:pt-6 sm:pb-5", GUTTER)}>
         <div className="min-w-0">
-          <h1 className="text-4xl leading-none font-semibold tracking-tight font-stretch-condensed sm:text-5xl">
+          <h1 className="text-3xl leading-none font-semibold tracking-tight break-words font-stretch-condensed sm:text-5xl">
             {trip.name}
           </h1>
           <p className="mt-2 text-sm text-signage-muted tabular-nums">{facts.join(" · ")}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
           <Button
             variant="outline"
-            className="min-h-11 border-white/30 bg-transparent px-4 text-signage-foreground hover:bg-white/10 hover:text-signage-foreground"
+            className="min-h-11 border-signage-foreground/30 bg-transparent px-4 text-signage-foreground hover:bg-signage-foreground/10 hover:text-signage-foreground"
             onClick={onEdit}
           >
             Edit trip
           </Button>
-          <Button className="min-h-11 bg-white px-4 text-foreground hover:bg-white/85" onClick={onAdd}>
+          <Button className="min-h-11 bg-signage-foreground px-4 text-signage hover:bg-signage-foreground/85" onClick={onAdd}>
             Add to trip
           </Button>
         </div>
       </div>
 
-      <nav aria-label="Days" className={cn("overflow-x-auto pb-5", GUTTER)}>
+      {/* Below sm the strip can overflow, so its end fades out to show there are more days to scroll to. */}
+      <nav
+        aria-label="Days"
+        className={cn("overflow-x-auto pb-3 max-sm:[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)] sm:pb-5", GUTTER)}
+      >
         <ol className="flex w-max min-w-full items-center">
           {days.map((day) => {
             const i = dayDiff(trip.start_date, day);
@@ -52,7 +56,7 @@ export function TripHeader({ trip, days, onAdd, onEdit, nav }: Props) {
                 <a
                   href={`#day-${day}`}
                   aria-label={`Day ${i + 1} · ${formatDay(day)}`}
-                  className="flex size-11 items-center justify-center rounded-full outline-offset-2 focus-visible:outline-2 focus-visible:outline-white"
+                  className="flex size-11 items-center justify-center rounded-full outline-offset-2 focus-visible:outline-2 focus-visible:outline-signage-foreground"
                 >
                   <span
                     className="flex size-8 items-center justify-center rounded-full text-sm font-bold tabular-nums ring-2 ring-signage transition-transform hover:scale-110"

@@ -16,6 +16,7 @@ type Props = {
   currency: string;
   onClose: () => void;
   onEdit: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
   /** The trip's days, for "Move to day" (ITIN-7). */
   days: string[];
@@ -25,7 +26,7 @@ type Props = {
   bare?: boolean;
 };
 
-export function DetailCard({ id, item, currency, onClose, onEdit, onDelete, days, tripStart, onMoveToDay, bare }: Props) {
+export function DetailCard({ id, item, currency, onClose, onEdit, onDuplicate, onDelete, days, tripStart, onMoveToDay, bare }: Props) {
   const moveId = useId();
   const [moveTo, setMoveTo] = useState(item.day);
   const startTz = item.start_timezone ?? "UTC";
@@ -91,6 +92,9 @@ export function DetailCard({ id, item, currency, onClose, onEdit, onDelete, days
       <div className="flex gap-2 border-t px-4 py-3">
         <Button variant="outline" className="min-h-11 px-4" onClick={onEdit}>
           Edit
+        </Button>
+        <Button variant="outline" className="min-h-11 px-4" onClick={onDuplicate}>
+          Duplicate
         </Button>
         <Button variant="ghost" className="ml-auto min-h-11 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
           Delete

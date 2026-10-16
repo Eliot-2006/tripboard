@@ -150,7 +150,7 @@ Tripboard draws a trip the way Beck and Vignelli drew a metro: each day is a col
 
 The layout runs full-bleed. The itinerary reads as a timetable column next to a line with stations. On large screens a sticky route diagram fills the other half at full viewport height and takes the bigger share as the screen widens. Density is high but regular: every day block has the same structure and the same scale, so a nine-day trip scans like a printed line map. Hierarchy comes from scale contrast within one family, Archivo, set condensed for names and with tabular figures for times and money.
 
-Open, not designed yet: dark mode (PRD UX-5, P1).
+Dark mode (PRD UX-5) is the same map at night, not an inverted page: see Dark Mode below.
 
 **Key Characteristics:**
 - White field, near-black ink, 1px hairline seams, no gradients.
@@ -184,6 +184,33 @@ A colorless ink-on-paper field that hands all of its color to the day lines.
 
 **The Never Alone Rule.** A day's ink always comes with its number in the bullet, and a station's state comes with a text badge. Color never carries meaning by itself.
 
+## Dark Mode
+
+Follows the system (`prefers-color-scheme: dark`), with no toggle. CSS only: `globals.css` overrides the `:root` tokens in one media block and sets `color-scheme` so native date pickers, selects and scrollbars match. No script, so there is no flash on load.
+
+The metaphor is the line diagram at night: paper becomes a blue-black field, ink becomes off-white, hairlines stay hairlines.
+
+| Token | Light | Dark |
+|---|---|---|
+| `--background` (paper) | #ffffff | #0d1117 |
+| `--foreground`, `--primary`, `--ring` (ink) | #121417 | #e8eaed |
+| `--popover` | #ffffff | #151b24 |
+| `--muted`, `--accent`, `--secondary` | #f3f4f2, #f3f4f2, #eceeeb | #161c26, #1f2631, #1f2631 |
+| `--muted-foreground` | #5b616a | #9aa3ae |
+| `--border` (seam) | #d9dcdf | #2a323d |
+| `--input` (field stroke) | #c9cdd1 | #3d4653 |
+| `--destructive` | #b42318 | #f97066 |
+| `--signage` (band) | #121417 | #1d2636 |
+| `--signage-foreground`, `--signage-muted` | #ffffff, #b9bec4 | #f4f6f8, #aab3bf |
+
+**The Band Stays a Band Rule.** In the dark the signage band is lifted one step above the field (#1d2636 on #0d1117) instead of sinking into it. Buttons on the band use `bg-signage-foreground text-signage`, never `bg-white`, so they flip with the theme.
+
+**Day inks do not change.** The same eight hex values hold on the dark field. Against #0d1117 they are 3.5:1 or more as marks (day 1 3.65, day 8 3.55, the rest 4.9 to 8.4), and every numeral keeps its 4.5:1 on its own bullet. The numbers inside the bullets carry the meaning, as always.
+
+**Map.** Raster tiles have no dark variant, so `.leaflet-tile-pane` alone gets `filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9) saturate(.4)` in dark mode. Pins, route lines, legend and attribution sit outside that pane and are untouched. Route lines (`.tripboard-route`) and flight rings (`.tripboard-ring`) take their color from the tokens, because CSS on the SVG path overrides the hex Leaflet is given. Zoom controls and attribution use popover and background tokens.
+
+Key contrasts (dark): ink on paper 15.7, muted on paper 7.4, muted on muted fill 6.7, muted on secondary 6.0, destructive on paper 6.8, band text 14.0, band muted 7.2.
+
 ## Typography
 
 **Display Font:** Archivo (with ui-sans-serif, system-ui, sans-serif)
@@ -207,11 +234,17 @@ A colorless ink-on-paper field that hands all of its color to the day lines.
 
 ## Layout
 
-Full-bleed bands, not a centered column. Every horizontal band (signage, budget strip, itinerary, map) uses the same side gutter, which grows with the screen: 16px, 24px from sm, 32px from lg, 48px from 2xl. The trip band stacks the name block and "Add to trip" (bottom-aligned, wrapping), then a strip map of the days that scrolls sideways when it overflows. Under the band, the budget strip and the date range share one row over a bottom seam and wrap on narrow screens.
+Full-bleed bands, not a centered column. Every horizontal band (signage, budget strip, itinerary, map) uses the same side gutter, which grows with the screen: 16px, 24px from sm, 32px from lg, 48px from 2xl. The trip band stacks the name block and "Add to trip" (bottom-aligned, wrapping), then a strip map of the days that scrolls sideways when it overflows (below sm its right end fades out to show there are more days). Under the band, the budget strip and the date range share one row over a bottom seam and wrap on narrow screens.
 
 The workspace is a two-column grid from lg: 1:1 at lg, 5fr / 7fr at xl, 2fr / 3fr at 2xl. The map takes more of the width as the screen grows. The map column is sticky at full viewport height and scrolls internally, and a single hairline seam divides it from the itinerary. Below lg there is one column, and an Itinerary / Map pair of toggle buttons picks which section shows.
 
 The itinerary rhythm is fixed: 32px between days, and stations are 12px vertical padding inside 44px-minimum rows. The station grid is a 28px marker column, an 88px timetable column (from sm, stacked above the title on phones), the title block, and the cost at the end. Line segments are 4px wide and centered at 14px in the marker column.
+
+**Phone first screen.** Today's plan has to be reachable without scrolling past chrome. Below sm the band is compact (30px name, Edit trip and Add to trip share one full-width row), the budget figures sit in a three-column grid at 18px, the sample-data note is one line, and the "Whole trip" button is hidden while the whole trip is showing, so the date range is a single row of two selects. The first station lands around 540px down the 844px screen.
+
+**States.** Loading is a skeleton in the page's own shape: a band of translucent bars on the signage, grey Platform bars (no spinners) for the budget strip, stations and trip cards, pulsing only when motion is allowed, with the text announced to screen readers. A trip that fails to load or is missing gets the signage band with its plain-language title, a sentence, and one primary action (Try again, or Back to your trips). The trip list's error and empty states share one dashed-border box with a condensed title.
+
+**Long text.** Names wrap (`break-words`), destination lists clamp to two lines on trip cards, and station titles wrap in full. Times with a zone read "2:00 PM Tokyo time", never a GMT offset.
 
 **The One Day Shape Rule.** Every day block has the same structure and scale whatever it contains: bullet, condensed date, line, stations. An empty day keeps its bullet and shows a dashed placeholder offering "Add something".
 

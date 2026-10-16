@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeItem } from "@/test/factories";
-import { formatMoney, itemCost, summarize } from "@/lib/budget";
+import { formatMoney, itemCost, spendByType, summarize } from "@/lib/budget";
 
 describe("summarize (PRD 4.6 example)", () => {
   const items = [
@@ -21,6 +21,28 @@ describe("summarize (PRD 4.6 example)", () => {
 
   it("hides budget remaining when no budget is set", () => {
     expect(summarize(items, null).budgetRemaining).toBeNull();
+  });
+});
+
+describe("spendByType", () => {
+  it("splits the PRD example, leaving the idea out", () => {
+    const items = [
+      makeItem({ type: "flight", status: "reserved", estimated_cost: 872 }),
+      makeItem({ type: "stay", status: "reserved", estimated_cost: 760 }),
+      makeItem({ type: "activity", status: "planned", estimated_cost: 184 }),
+      makeItem({ type: "activity", status: "idea", estimated_cost: 500 }),
+    ];
+    expect(spendByType(items)).toEqual({ flight: 872, stay: 760, activity: 184 });
+  });
+
+  it("prefers actual cost and sums to the estimated total", () => {
+    const items = [
+      makeItem({ type: "stay", status: "planned", estimated_cost: 100, actual_cost: 120.1 }),
+      makeItem({ type: "stay", status: "planned", estimated_cost: 0.2 }),
+    ];
+    const by = spendByType(items);
+    expect(by.stay).toBe(120.3);
+    expect(by.flight + by.stay + by.activity).toBe(summarize(items, null).estimated);
   });
 });
 

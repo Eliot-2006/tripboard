@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { loadDemoSeed } from "@/lib/data/demo-seed";
+import { NewItemSchema } from "@/types/schemas";
 import { makeItem } from "@/test/factories";
 import {
   applyMove,
+  duplicateOf,
   insertPositionByTime,
   planMove,
   planMoveToDay,
@@ -154,5 +156,41 @@ describe("stayContinuations (ITIN-8)", () => {
   it("ignores stays without a check-out", () => {
     const open = makeItem({ type: "stay", day: "2027-04-10", end_at: null });
     expect(stayContinuations([open], ["2027-04-11"])).toEqual({ "2027-04-11": [] });
+  });
+});
+
+describe("duplicateOf (ITEM-12)", () => {
+  const paid = makeItem({
+    id: "a",
+    day: "2027-04-12",
+    position: 1000,
+    status: "reserved",
+    payment_status: "paid",
+    confirmation_number: "ABC123",
+    actual_cost: 80,
+    estimated_cost: 75,
+  });
+  const next = makeItem({ id: "b", day: "2027-04-12", position: 2000 });
+
+  it("goes right after the original and is not a second booking", () => {
+    const copy = duplicateOf(paid, [next, paid]);
+    expect(copy).toMatchObject({
+      title: paid.title,
+      day: paid.day,
+      start_at: paid.start_at,
+      estimated_cost: 75,
+      position: 1500,
+      status: "planned",
+      payment_status: "unpaid",
+      confirmation_number: null,
+      actual_cost: null,
+    });
+    expect(copy).not.toHaveProperty("id");
+    expect(NewItemSchema.safeParse(copy).success).toBe(true);
+  });
+
+  it("goes last when the original is last, and keeps an idea an idea", () => {
+    const idea = makeItem({ id: "c", position: 3000, status: "idea" });
+    expect(duplicateOf(idea, [idea])).toMatchObject({ position: 4000, status: "idea" });
   });
 });

@@ -29,3 +29,12 @@ describe("dayTextColor", () => {
     });
   });
 });
+
+describe("day inks on the dark paper (--background in globals.css)", () => {
+  it("stay visible as non-text marks (at least 3:1)", () => {
+    DAY_COLORS.forEach((ink) => {
+      const [hi, lo] = [luminance(ink), luminance("#0d1117")].sort((a, b) => b - a);
+      expect((hi + 0.05) / (lo + 0.05), ink).toBeGreaterThanOrEqual(3);
+    });
+  });
+});

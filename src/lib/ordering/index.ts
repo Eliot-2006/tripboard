@@ -1,5 +1,5 @@
 import { localDay, shiftItemToDay } from "@/lib/time";
-import type { Item } from "@/types";
+import type { Item, NewItem } from "@/types";
 
 const EPSILON = 1e-6;
 const STEP = 1000;
@@ -93,4 +93,25 @@ export function stayContinuations(items: Item[], days: string[]): Record<string,
       stays.filter((s) => s.day < day && day < localDay(s.end_at!, s.end_timezone ?? s.start_timezone ?? "UTC")),
     ]),
   );
+}
+
+/**
+ * A copy of `item` to save right after it on the same day (ITEM-12). A copy is not a second booking: it has no
+ * confirmation or actual cost, so it is unpaid, and a reserved item drops to planned.
+ */
+export function duplicateOf(item: Item, dayItems: Item[]): NewItem {
+  const fields: Partial<Item> = { ...item };
+  delete fields.id;
+  delete fields.created_at;
+  delete fields.updated_at;
+  const after = sortItems(dayItems).filter((i) => i.position > item.position)[0];
+  return {
+    ...(fields as NewItem),
+    confirmation_number: null,
+    actual_cost: null,
+    payment_status: "unpaid",
+    status: item.status === "reserved" ? "planned" : item.status,
+    // ponytail: midpoint, so ~50 copies of the same spot exhaust float precision; use planMove's renumbering then.
+    position: positionBetween(item.position, after?.position ?? null),
+  };
 }
