@@ -10,7 +10,10 @@ const titles = async (region: Locator) =>
 
 /** A real pointer drag with intermediate moves, as dnd-kit needs to see movement before it starts. */
 async function drag(page: Page, from: Locator, to: Locator, where: "top" | "center" = "center") {
-  await from.scrollIntoViewIfNeeded();
+  // Center the pair on screen: a pointer near the viewport edge makes dnd-kit auto-scroll mid-drag, so the drop
+  // would land below the target measured here.
+  const mid = ((await from.boundingBox())!.y + (await to.boundingBox())!.y) / 2;
+  await page.evaluate((y) => window.scrollBy(0, y - window.innerHeight / 2), mid);
   const a = (await from.boundingBox())!;
   const b = (await to.boundingBox())!;
   await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
@@ -18,18 +21,20 @@ async function drag(page: Page, from: Locator, to: Locator, where: "top" | "cent
   await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2 + 10, { steps: 5 });
   const y = where === "top" ? b.y + 8 : b.y + b.height / 2;
   await page.mouse.move(b.x + b.width / 2, y, { steps: 20 });
+  // WebKit needs a frame to dispatch the final pointer move before mouseup.
+  await page.evaluate(() => new Promise(requestAnimationFrame));
   await page.mouse.up();
 }
 
-// Tall enough that a drag's source and target are on screen together.
-test.use({ viewport: { width: 1280, height: 1400 } });
-
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, isMobile }, testInfo) => {
+  // Keep desktop drag targets together without replacing phone or tablet project viewports.
+  if (!isMobile && testInfo.project.name !== "tablet") await page.setViewportSize({ width: 1280, height: 1400 });
   await page.goto("/demo");
   await expect(page.getByRole("heading", { name: "Japan 2027" })).toBeVisible();
 });
 
-test("drags an item to another day, keeping its clock time (ITIN-6)", async ({ page }) => {
+test("drags an item to another day, keeping its clock time (ITIN-6)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Pointer mouse drags do not model the 200ms touch sensor; keyboard and Move to day cover phones");
   await drag(page, handle(page, "Senso-ji Temple"), day(page, 4).getByRole("button", { name: /^(?!Move |\d+\. ).*Breakfast at Tsukiji/ }), "top");
   await expect(day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toHaveCount(0);
   const moved = day(page, 4).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ });
@@ -43,13 +48,15 @@ test("drags an item to another day, keeping its clock time (ITIN-6)", async ({ p
   await expect(day(page, 4).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toBeVisible();
 });
 
-test("reorders within a day (ITIN-5)", async ({ page }) => {
+test("reorders within a day (ITIN-5)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Pointer mouse drags do not model the 200ms touch sensor; keyboard and Move to day cover phones");
   expect(await titles(day(page, 3))).toEqual(["Senso-ji Temple", "teamLab Planets", "Explore Akihabara"]);
   await drag(page, handle(page, "Explore Akihabara"), day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ }), "top");
   await expect.poll(() => titles(day(page, 3))).toEqual(["Explore Akihabara", "Senso-ji Temple", "teamLab Planets"]);
 });
 
-test("drops onto an empty day", async ({ page }) => {
+test("drops onto an empty day", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Pointer mouse drags do not model the 200ms touch sensor; keyboard and Move to day cover phones");
   await drag(page, handle(page, "Kaiseki dinner in Gion"), day(page, 7));
   await expect(day(page, 7).getByRole("button", { name: /^(?!Move |\d+\. ).*Kaiseki dinner in Gion/ })).toContainText("6:30 PM");
   await expect(day(page, 6).getByRole("button", { name: /^(?!Move |\d+\. ).*Kaiseki/ })).toHaveCount(0);
@@ -91,9 +98,58 @@ test("moves with the Move to day menu, placing it by time (ITIN-7)", async ({ pa
   await expect(details.getByRole("button", { name: "Move", exact: true })).toBeDisabled();
   await details.getByLabel("Move to day").selectOption("2027-04-15");
   await details.getByRole("button", { name: "Move", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Item details" })).toContainText("Thu, Apr 15, 7:00 PM");
+  await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Close" }).click();
   // 7:00 PM goes after Fushimi Inari (7:30 AM) and Kaiseki (6:30 PM).
   await expect.poll(() => titles(day(page, 6))).toEqual(["Fushimi Inari Shrine", "Kaiseki dinner in Gion", "Ramen at Ichiran Shinjuku"]);
-  await expect(day(page, 6).getByRole("region", { name: "Item details" })).toContainText("Thu, Apr 15, 7:00 PM");
   // Focus follows the item to its new day.
   await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Ramen at Ichiran/ })).toBeFocused();
+});
+
+test("collapses and expands a day from its heading (ITIN-11)", async ({ page }) => {
+  const toggle = page.getByRole("button", { name: /Day 3 · / });
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(toggle).toContainText("3 items");
+  await expect(handle(page, "Senso-ji Temple")).toHaveCount(0);
+  const mapToggle = page.getByRole("button", { name: "map", exact: true });
+  if (await mapToggle.isVisible()) await mapToggle.click();
+  await expect(page.getByRole("button", { name: "4. Senso-ji Temple" })).toBeVisible();
+  if (await mapToggle.isVisible()) await page.getByRole("button", { name: "itinerary", exact: true }).click();
+
+  await toggle.focus();
+  await page.keyboard.press("Space");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  expect(await titles(day(page, 3))).toEqual(["Senso-ji Temple", "teamLab Planets", "Explore Akihabara"]);
+});
+
+test("a map pin opens its collapsed day (ITIN-11)", async ({ page }) => {
+  test.skip(await page.getByRole("button", { name: "map", exact: true }).isVisible(), "This cross-panel check requires the side-by-side desktop layout");
+  const toggle = page.getByRole("button", { name: /Day 3 · / });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await page.getByRole("button", { name: "4. Senso-ji Temple" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toHaveAttribute("aria-expanded", "true");
+
+  await toggle.click();
+  await page.getByRole("button", { name: "4. Senso-ji Temple" }).click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+});
+
+test("drops onto a collapsed day, at its end", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Pointer mouse drags do not model the 200ms touch sensor; keyboard and Move to day cover phones");
+  await page.getByRole("button", { name: /Day 6 · / }).click();
+  await drag(page, handle(page, "Explore Akihabara"), page.getByRole("button", { name: /Day 6 · / }));
+  await expect(page.getByRole("status").filter({ hasText: "Moved" })).toContainText("Explore Akihabara");
+  // A click while the drop animation settles can be swallowed, so retry until the day opens.
+  const heading = page.getByRole("button", { name: /Day 6 · / });
+  await expect(async () => {
+    if ((await heading.getAttribute("aria-expanded")) === "false") await heading.click();
+    await expect(heading).toHaveAttribute("aria-expanded", "true", { timeout: 500 });
+  }).toPass();
+  await expect.poll(() => titles(day(page, 6))).toEqual(["Fushimi Inari Shrine", "Kaiseki dinner in Gion", "Explore Akihabara"]);
 });

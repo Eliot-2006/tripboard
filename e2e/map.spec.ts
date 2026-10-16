@@ -5,6 +5,8 @@ const pins = (page: Page) => page.locator(".leaflet-marker-icon");
 test.beforeEach(async ({ page }) => {
   await page.goto("/demo");
   await expect(page.getByRole("heading", { name: "Japan 2027" })).toBeVisible();
+  const mapToggle = page.getByRole("button", { name: "map", exact: true });
+  if (await mapToggle.isVisible()) await mapToggle.click();
   await expect(pins(page).first()).toBeVisible();
 });
 
@@ -28,6 +30,7 @@ test("pins follow the date range and are renumbered (MAP-1, MAP-5)", async ({ pa
 });
 
 test("a pin selects its item, and selecting an item highlights its pin (MAP-4)", async ({ page }) => {
+  test.skip(await page.getByRole("button", { name: "map", exact: true }).isVisible(), "This cross-panel check requires the side-by-side desktop layout");
   const sensoji = page.getByRole("button", { name: "4. Senso-ji Temple" });
   await sensoji.focus();
   await page.keyboard.press("Enter");
@@ -41,6 +44,7 @@ test("a pin selects its item, and selecting an item highlights its pin (MAP-4)",
 });
 
 test("items without coordinates stay off the map", async ({ page }) => {
+  test.skip(await page.getByRole("button", { name: "map", exact: true }).isVisible(), "This cross-panel check requires the side-by-side desktop layout");
   await page.getByRole("button", { name: "Add to trip" }).click();
   await page.getByRole("dialog").getByRole("button", { name: /^(?!Move |\d+\. ).*Activity/ }).click();
   await page.getByRole("dialog").getByLabel("Name", { exact: true }).fill("Laundry");

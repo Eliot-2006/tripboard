@@ -27,14 +27,14 @@ test("adds an activity from an empty day and updates the budget (ITEM-1, ITEM-4,
   await dialog(page).getByLabel("Estimated cost (USD)").fill("50");
   await dialog(page).getByRole("button", { name: "Add activity" }).click();
 
+  const details = page.getByRole("region", { name: "Item details" });
+  await expect(details).toContainText("Restaurant");
+  await details.getByRole("button", { name: "Close" }).click();
   await expect(dialog(page)).toHaveCount(0);
   const card = day(page, 7).getByRole("button", { name: /^(?!Move |\d+\. ).*Nishiki Market/ });
   await expect(card).toContainText("11:00 AM");
-  await expect(card).toHaveAttribute("aria-expanded", "true");
   await expectBudget(page, { "Estimated cost": "$2,990", "Budget remaining": "$10" });
   await expect(page.getByRole("status").filter({ hasText: "Added" })).toHaveText("Added “Nishiki Market”");
-  // A restaurant is labelled as one (ITEM-4).
-  await expect(day(page, 7).getByRole("region", { name: "Item details" })).toContainText("Restaurant");
 });
 
 test("adds an overnight cross-time-zone flight, with zones typed as cities (ITEM-2)", async ({ page }) => {
@@ -52,11 +52,12 @@ test("adds an overnight cross-time-zone flight, with zones typed as cities (ITEM
   await d.getByLabel("Arrival time zone").fill("tokyo");
   await d.getByRole("button", { name: "Add flight" }).click();
 
+  const details = page.getByRole("region", { name: "Item details" });
+  await expect(details).toContainText("Sat, Apr 10, 1:00 PM Los Angeles time");
+  await expect(details).toContainText("Sun, Apr 11, 5:30 PM Tokyo time");
+  await details.getByRole("button", { name: "Close" }).click();
   const card = day(page, 1).getByRole("button", { name: /^(?!Move |\d+\. ).*SFO to Osaka/ });
   await expect(card).toContainText("1:00 PM → 5:30 PM +1");
-  const details = day(page, 1).getByRole("region", { name: "Item details" });
-  await expect(details).toContainText("Sat, Apr 10, 1:00 PM GMT-7");
-  await expect(details).toContainText("Sun, Apr 11, 5:30 PM GMT+9");
   // Inserted by start time, after the 11:30 AM LAX flight (ITIN-10).
   await expect(day(page, 1).getByRole("listitem").first()).toContainText("LAX to Tokyo Haneda");
 });
@@ -68,6 +69,7 @@ test("saves an item with no exact time as Anytime (ITEM-5)", async ({ page }) =>
   await dialog(page).getByLabel("No exact time").check();
   await expect(dialog(page).getByLabel("Start time", { exact: true })).toHaveCount(0);
   await dialog(page).getByRole("button", { name: "Add activity" }).click();
+  await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Close" }).click();
   await expect(day(page, 9).getByRole("button", { name: /^(?!Move |\d+\. ).*Souvenir shopping/ })).toContainText("Anytime");
 });
 
@@ -125,12 +127,16 @@ test("edits an item: marking it paid reserves it and updates the budget (ITEM-6,
   await expect(d.getByRole("option", { name: "Planned" })).toBeDisabled();
   await d.getByRole("button", { name: "Save changes" }).click();
 
+  const details = page.getByRole("region", { name: "Item details" });
+  await expect(details).toContainText("Reserved");
+  await expect(details).toContainText("Paid");
+  await expect(details.getByRole("button", { name: "Edit" })).toBeFocused();
+  await details.getByRole("button", { name: "Close" }).click();
   const card = page.getByRole("button", { name: /^(?!Move |\d+\. ).*Ramen at Ichiran/ });
   await expect(card).toContainText("Reserved");
   await expect(card).toContainText("Paid");
   await expectBudget(page, { Paid: "$925", "Remaining to pay": "$2,015" });
-  // Focus goes back to where editing started.
-  await expect(page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Edit" })).toBeFocused();
+  await expect(card).toBeFocused();
 });
 
 test("editing the date moves the item to that day", async ({ page }) => {
@@ -138,6 +144,7 @@ test("editing the date moves the item to that day", async ({ page }) => {
   await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Edit" }).click();
   await dialog(page).getByLabel("Start date").fill("2027-04-16");
   await dialog(page).getByRole("button", { name: "Save changes" }).click();
+  await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Close" }).click();
   await expect(day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toHaveCount(0);
   await expect(day(page, 7).getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toContainText("9:00 AM");
 });
@@ -150,7 +157,7 @@ test("deletes an item only after confirming (ITEM-6)", async ({ page }) => {
   await details.getByRole("button", { name: "Delete" }).click();
   await expect(page.getByRole("alertdialog")).toContainText("Delete “Kaiseki dinner in Gion”?");
   await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click();
-  await expect(card).toBeVisible();
+  await expect(details).toBeVisible();
 
   await details.getByRole("button", { name: "Delete" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
@@ -158,6 +165,40 @@ test("deletes an item only after confirming (ITEM-6)", async ({ page }) => {
   await expect(card).toHaveCount(0);
   await expectBudget(page, { "Estimated cost": "$2,820", "Budget remaining": "$180" });
   await expect(page.getByRole("status").filter({ hasText: "Deleted" })).toHaveText("Deleted “Kaiseki dinner in Gion”");
-  // Focus stays where the item was: its day.
-  await expect(page.getByRole("heading", { name: /^Day 6 · / })).toBeFocused();
+  // Focus stays where the item was: its day's heading button.
+  await expect(page.getByRole("button", { name: /^Day 6 · / })).toBeFocused();
+});
+
+test("duplicates an item right after the original, as an unpaid planned copy (ITEM-12)", async ({ page }) => {
+  const budget = page.getByRole("region", { name: "Budget summary" });
+  const figure = (label: string) =>
+    budget.getByRole("term").filter({ hasText: new RegExp(`^${label}$`) }).locator("xpath=following-sibling::dd[1]");
+  const paid = await figure("Paid").textContent();
+
+  await day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*teamLab Planets/ }).click();
+  await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Duplicate" }).click();
+
+  // The copy is selected and is not a second booking.
+  const details = page.getByRole("region", { name: "Item details" });
+  await expect(details).toContainText("Planned");
+  await expect(details).toContainText("Unpaid");
+  await expect(details).not.toContainText("TLP-99120");
+  await expect(details).not.toContainText("Actual cost");
+  await details.getByRole("button", { name: "Close" }).click();
+
+  const handles = day(page, 3).getByRole("button", { name: /^Move / });
+  await expect(handles).toHaveCount(4);
+  await expect(handles.nth(1)).toHaveAttribute("aria-label", "Move teamLab Planets");
+  await expect(handles.nth(2)).toHaveAttribute("aria-label", "Move teamLab Planets");
+  await expect(handles.nth(3)).toHaveAttribute("aria-label", "Move Explore Akihabara");
+
+  // The copy keeps the original's time.
+  const copy = day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*teamLab Planets/ }).nth(1);
+  const original = day(page, 3).getByRole("button", { name: /^(?!Move |\d+\. ).*teamLab Planets/ }).first();
+  await expect(copy).toContainText(((await original.textContent()) ?? "").match(/\d+:\d+ [AP]M/)![0]);
+  await expect(page.getByRole("status").filter({ hasText: "Duplicated" })).toHaveText(/^Duplicated “teamLab Planets”/);
+
+  // No phantom payment: Paid is unchanged while the estimate grows by the copy's cost.
+  await expect(figure("Paid")).toHaveText(paid!);
+  await expect(figure("Estimated cost")).toHaveText("$2,972");
 });
