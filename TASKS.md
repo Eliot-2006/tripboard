@@ -30,11 +30,19 @@ The user commits and pushes themselves (global CLAUDE.md). Workers do not commit
 | T6 | README: screenshots, stack, future work | V1 DoD | P0 | T4, T5 | DONE | Codex → Claude (Codex hit its limit) · ws 992ff879 / docs/readme-v1 | Integrated README (status, screenshots, stack, future work) + 5 screenshots in docs/screenshots |
 | T9 | Cross-browser and viewport regression (Firefox, WebKit, phones, tablet) | NFR-5, UX-1, UX-2 | P0 | T1, T2 | DONE | Codex → Claude · ws a96e3063 / test/cross-browser | Projects: chromium, firefox, webkit, iphone-13, pixel-7, tablet (`npm run e2e:all`; `npm run e2e` stays chromium). 205 pass, 20 intentional skips (desktop-only checks on phones). Firefox doesn't launch on this Mac: run it in CI. Orchestrator fixes: dev badge off (it covered the phone sheet's Edit button), auth-form fill retry (WebKit hydration) |
 | T10 | Independent review of integrated T0–T5 diff (correctness, a11y, security, simplicity) | all | P0 | T5 | DONE | Codex → Claude · ws 437c5893 / review/integration-1 | No high/med findings. Kept: duplicate in-flight guard, focus on the copy, collapsing a day deselects its item. Fixed a test Codex broke. Integrated; 173 unit, 45/45 e2e |
-| T7 | Deploy to Vercel, production map tiles | M6 | P0 | all | BLOCKED | | Needs user approval (production deploy, tile provider terms) |
+| T7 | Deploy to Vercel, production map tiles | M6 | P0 | all | DONE | user | Live at https://tripboard-coral.vercel.app, MapTiler Dataviz tiles, key restricted to localhost + the Vercel domain |
+| P1 | Link preview, app icon, MapTiler logo (free-plan requirement) | V1 DoD | P0 | T7 | DONE | Codex · feat/link-preview-map-logo | Static opengraph-image.png, icon.svg, apple-icon.png; logo only when tiles are MapTiler |
+| P2 | Portfolio README and fresh screenshots | V1 DoD | P0 | T7 | DONE | Sonnet subagent | Screenshots predate the map logo |
+| P3 | Ponytail cleanup: shared e2e helpers | – | – | – | DONE | orchestrator | e2e/helpers.ts; account spec now gets the drag-centering fix |
+| A1 | Password reset, email-link landing, unconfirmed-email message | AUTH-1..3 | P0 | – | DONE | Codex · feat/password-reset | token_hash flow (/auth/confirm), /forgot-password, /reset-password. Needs user: Resend SMTP, Confirm email on, two email templates |
+| A2 | Keep the free Supabase project awake | NFR | P0 | T7 | DONE | orchestrator | Daily Vercel cron → /api/keepalive |
+| A3 | Remove disposable test users; sign-up test no longer creates users | – | – | – | DONE | orchestrator | Deleted 94 tripboard-e2e users (approved). Sign-up e2e mocks Supabase |
 | T8 | Sign in with Google | AUTH-4 | P1 | – | BLOCKED | | Needs Google OAuth client configured in Supabase by the user |
 | – | Place search | GEO-1 | P2 | – | BACKLOG | | Deferred per PRD |
 
 ## Decisions
+
+- 2026-10-28: Codex workers run gpt-6.1-sol (no gpt-6.1-terra exists). Known flake: move.spec "drops onto a collapsed day" on WebKit, about 1 in 30 under load; body unchanged from main.
 
 - 2026-10-15: Claude usage is low, so new workers (T9, T6, reviews) run on Codex. Running Claude workers finish their tasks.
 

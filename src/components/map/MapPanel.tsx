@@ -2,6 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
 import { dayTextColor, ROUTE_COLOR } from "@/lib/map/colors";
@@ -94,6 +95,15 @@ export function MapPanel({ items, tripStart, selectedId, onSelect }: Props) {
           <FitToStops points={stops.flatMap((s) => [place(s.at), ...(s.end ? [place(s.end)] : [])])} />
           <PanToSelected at={stops.find((s) => s.item.id === selectedId)?.at} place={place} />
         </MapContainer>
+        {TILE_URL.includes("api.maptiler.com") && (
+          <a
+            href="https://www.maptiler.com/"
+            aria-label="MapTiler"
+            className="absolute bottom-6 left-2 z-[1000] flex min-h-11 items-center rounded bg-signage px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <Image src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler" width={67} height={20} unoptimized />
+          </a>
+        )}
         {stops.length === 0 && (
           <p className="pointer-events-none absolute inset-x-14 top-4 z-[1000] rounded-md border bg-background p-3 text-center text-sm text-muted-foreground">
             No stops with a map location in this range. Add latitude and longitude to an item to see it here.

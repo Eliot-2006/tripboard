@@ -27,7 +27,7 @@ export function isRealLocalTime(day: string, time: string, tz: string): boolean 
 
 let zoneNames: string[] | undefined;
 /** IANA zone names, plus UTC, which some browsers leave out. */
-export function timeZoneNames(): string[] {
+function timeZoneNames(): string[] {
   zoneNames ??= [...new Set([...Intl.supportedValuesOf("timeZone"), "UTC"])];
   return zoneNames;
 }

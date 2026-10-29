@@ -1,75 +1,147 @@
 # Tripboard
 
-A travel planning web app: one trip workspace with a day-by-day itinerary, a map companion and a budget summary.
+A travel planner that keeps a whole trip in one place: a day-by-day itinerary, a synced map and a running budget.
 
-**Status: working demo and accounts.** `/demo` runs the trip workspace end to end on a seeded, in-memory trip (Japan 2027): day-by-day itinerary, item details (a bottom sheet on phones), date range filter, budget summary, adding, editing, duplicating and deleting flights, stays and activities, collapsible days, drag and drop within and between days (mouse, touch and keyboard) with a "Move to day" fallback, and a Leaflet map with numbered pins, route lines and flight arcs that stays in sync with the itinerary. It includes system dark mode, readable city-based time zone labels, spending totals by item type and a text warning when a trip is over budget. Changes reset on refresh. Signed-in users get the same workspace on Supabase: email/password authentication, upcoming and past trip groups, and trip creation, editing and deletion. Row Level Security keeps every trip private to its owner, and the account data contract runs end to end against a dedicated Supabase test account.
+**[Live app](https://tripboard-coral.vercel.app)** · **[Try the demo (no sign-up)](https://tripboard-coral.vercel.app/demo)**
+
+![Tripboard desktop workspace in light mode: itinerary and flight details beside the route map](docs/screenshots/demo-desktop-light.png)
+
+## Features
+
+**Itinerary**
+- Flights, stays and activities as cards, grouped by day, with booking and payment status
+- Add, edit, duplicate and delete items; collapsible days; a date range filter for the whole trip or a slice of it
+- Drag and drop within a day or between days, with a "Move to day" control as a non-drag alternative
+- Times shown in each place's own time zone (for example a Los Angeles departure and a Tokyo arrival)
+
+**Map**
+- Numbered pins and per-day colored routes, with flight arcs between cities
+- Selecting an item centers the map on it, and the map follows the active date range
+
+**Budget**
+- Total budget, estimated cost, paid, remaining to pay and budget remaining
+- Spending by item type, and a text warning when the trip is over budget
+
+**Accounts**
+- Email and password sign-up and sign-in on Supabase
+- Upcoming and past trip groups; create, edit and delete trips
+- Every trip is private to its owner (Row Level Security)
+- `/demo` runs the same workspace on a seeded, in-memory trip; changes reset on refresh
+
+**Mobile and accessibility**
+- Phone layout with an Itinerary / Map toggle and a bottom sheet for item details
+- Touch and keyboard drag, with screen reader announcements
+- Follows the system dark mode
+
+## Tech stack
+
+| Area | Choice | Why |
+|---|---|---|
+| Framework | Next.js 16 (App Router), React 19, TypeScript | Routing, server rendering and typed end to end |
+| Styling | Tailwind CSS 4, Base UI primitives | Accessible unstyled components with custom styling |
+| Data | Supabase (Postgres, Auth, Row Level Security) | Per-user data with the access rules enforced in the database |
+| Client state | TanStack Query | Caching and optimistic updates |
+| Forms | React Hook Form, Zod | Schema validation shared with the domain types |
+| Drag and drop | dnd-kit | Pointer, touch and keyboard sensors |
+| Maps | Leaflet, react-leaflet, MapTiler tiles | Lightweight map with a swappable tile provider |
+| Dates | Luxon | Time zone aware times |
+| Testing | Vitest, Playwright | Unit and repository tests; browser flows across devices |
+| Hosting | Vercel | Deploys from GitHub on every merge to main |
+
+## Engineering highlights
+
+- **One repository interface, two backends.** The UI talks to a `Repository` interface. An in-memory `DemoRepository` powers `/demo`; a `SupabaseRepository` powers accounts. A single contract test runs against both, so they stay interchangeable.
+- **Row Level Security.** Authorization lives in Postgres policies, not in app code. `supabase/tests/rls_isolation.sql` checks that one user cannot read or change another user's trips.
+- **Optimistic updates with rollback.** Reordering and moving items updates the UI immediately through TanStack Query and restores the previous state if the write fails.
+- **Pure, tested logic.** Time zone conversion, budget totals, item ordering and map path building are plain functions in `src/lib/`, with no date, money or ordering math inside components. 173 unit tests cover them.
+- **Accessible drag and drop.** Keyboard and touch sensors, custom screen reader announcements for pickup and drop, focus returned to the moved item, and a "Move to day" fallback for anyone who does not drag.
+- **Swappable map tiles.** The tile URL and attribution come from environment variables, so the provider can change without a code change.
 
 ## Screenshots
 
-![Tripboard landing page with the demo call to action and Japan 2027 route overview](docs/screenshots/landing-page.png)
+**Desktop**
 
-### Demo workspace
+| Light | Dark |
+|---|---|
+| ![Desktop workspace in light mode](docs/screenshots/demo-desktop-light.png) | ![Desktop workspace in dark mode](docs/screenshots/demo-desktop-dark.png) |
 
-![Tripboard desktop workspace in light mode with a selected flight's details beside the route map](docs/screenshots/demo-desktop-light.png)
-
-![Tripboard desktop workspace in dark mode with a selected flight's details beside the route map](docs/screenshots/demo-desktop-dark.png)
-
-### Phone views
+**Phone**
 
 | Itinerary | Map |
 |---|---|
-| ![Tripboard phone itinerary showing the budget and first trip days](docs/screenshots/demo-phone-itinerary.png) | ![Tripboard phone map view showing the day legend and route map](docs/screenshots/demo-phone-map.png) |
+| ![Phone itinerary with budget and the first trip days](docs/screenshots/demo-phone-itinerary.png) | ![Phone map view with day legend and route](docs/screenshots/demo-phone-map.png) |
 
-## Stack
+**Landing page**
 
-- Next.js 16 App Router, React 19 and TypeScript
-- Tailwind CSS 4 with shadcn-style primitives built on Base UI
-- Supabase Postgres and Auth behind a shared repository interface
-- TanStack Query for server data and optimistic updates
-- React Hook Form and Zod for forms and validation
-- dnd-kit for sortable itinerary items
-- Leaflet and react-leaflet for maps; Luxon for dates and time zones
-- Vitest for logic and repository tests; Playwright for browser flows
+![Landing page with the demo call to action and the Japan 2027 route overview](docs/screenshots/landing-page.png)
 
-UI state stays in React components. Zustand was dropped because it was unused.
+## Testing
 
-## Run
+```bash
+npm test          # Vitest: 173 unit and repository tests
+npm run e2e       # Playwright on Chromium (starts the dev server)
+npm run e2e:all   # Playwright on every configured project
+```
 
-    npm install
-    npm run dev        # http://localhost:3000
-    npm test           # Vitest
-    npm run e2e        # Playwright (starts the dev server)
-    npx next typegen   # generates route types (e.g. LayoutProps) so `tsc --noEmit` passes before a build
+- **Unit tests** cover time zones, budget math, ordering, map paths, form validation and the demo repository.
+- **Repository contract** runs against the Supabase repository too when `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` for a dedicated test account are set in `.env.local`. It deletes that account's trips afterwards and is skipped otherwise.
+- **End-to-end tests** cover the landing page, the demo workspace, item add/edit/delete, moving items, the map and signed-in account flows.
+- **Browser projects:** Chromium, WebKit, iPhone 13, Pixel 7 and a tablet viewport run with `npm run e2e:all`. Firefox is configured as well.
 
-Copy `.env.example` to `.env.local` and fill in the Supabase project URL and publishable key (Project Settings → API Keys). Without them the demo still works, and the account pages say accounts are unavailable.
+## Run locally
 
-The database schema lives in `supabase/migrations/`. `supabase/tests/rls_isolation.sql` checks that one user can't read or change another user's trips (AUTH-5): paste it into the Supabase SQL Editor, it rolls itself back. `npm test` also runs the repository contract against Supabase when `.env.local` has `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` for a dedicated test account (it deletes that account's trips afterwards), and skips it otherwise. `e2e/account.spec.ts` uses the same account to drive the signed-in flows in a browser (it deletes only the trips it creates); its sign-up test registers a throwaway `tripboard-e2e-…@example.com` user on each run.
+```bash
+npm install
+cp .env.example .env.local
+npm run dev        # http://localhost:3000
+```
 
+The demo at `/demo` works without any environment variables. For accounts, set these in `.env.local`:
 
-## Layout
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
+| `NEXT_PUBLIC_MAP_TILE_URL` | Optional. Tile URL template, defaults to OpenStreetMap |
+| `NEXT_PUBLIC_MAP_ATTRIBUTION` | Optional. Attribution for the tile provider |
 
-    docs/                       product docs (overview, PRD, technical) and design/plan notes
-    e2e/                        Playwright tests (landing, sign-in checks, demo flows)
-    supabase/seed/demo-trip.json  the demo trip, sparse (omitted columns default via itemDefaults)
-    src/app/                    routes: landing, /demo, /login, /signup, /trips, /trips/[tripId]
-    src/components/             trip, itinerary (cards, details, item form and dialogs), budget, map; primitives in ui/
-    src/lib/data/               Repository interface, in-memory DemoRepository, SupabaseRepository, provider, query hooks, shared contract test
-    src/lib/supabase/           Supabase clients for the browser and the server (src/proxy.ts refreshes the session)
-    supabase/migrations/        schema, constraints and Row Level Security
-    src/lib/{time,budget,ordering,map}/   pure, tested logic (no date, money or ordering math in components)
-    src/lib/items/              item form: validation, form <-> item conversion, placement, default time zone
-    src/test/                   test factories
-    src/types/                  Zod schemas and inferred types
+Scripts:
 
-`src/components/ui/` follows shadcn/ui conventions. `dialog`, `alert-dialog`, `input` and `label` were written by hand on top of `@base-ui/react` because the shadcn registry was unreachable when they were added; `npx shadcn add` can replace them later.
+```bash
+npm run dev       # development server
+npm run build     # production build
+npm start         # serve the production build
+npm run lint      # ESLint
+npm test          # Vitest
+npm run e2e       # Playwright (Chromium)
+npx next typegen  # generate route types; run before `tsc --noEmit`
+```
 
-Config files (`next.config.ts`, `tsconfig.json`, `vitest.config.ts`, `playwright.config.ts`, `components.json`, ...) stay at the root where the tools expect them. `AGENTS.md` and `CLAUDE.md` were generated by `create-next-app`.
+The database schema is in `supabase/migrations/`. To check row isolation, paste `supabase/tests/rls_isolation.sql` into the Supabase SQL Editor; it rolls itself back.
 
-## Future work
+## Project structure
 
-- Deploy the app and complete M6, using a production tile provider instead of OpenStreetMap's standard development tile server. Configure it with `NEXT_PUBLIC_MAP_TILE_URL` and `NEXT_PUBLIC_MAP_ATTRIBUTION`.
-- Add Google sign-in (AUTH-4, P1).
-- Add optional place search (GEO-1, P2) after choosing a provider and checking its current terms and pricing.
-- V2: import confirmation PDFs or screenshots into reviewable draft items, attach the source document and detect duplicates.
-- V3: add travel-time and schedule warnings, free-time blocks, an installable web app and privacy-aware read-only sharing.
-- Later: collaboration, expense splitting, recommendations, real routes, email import, a during-trip mode and a native app.
+```
+src/
+  app/                 routes: landing, /demo, /login, /signup, /trips, /trips/[tripId]
+  components/          trip, itinerary, budget, map, auth, and ui primitives
+  lib/
+    data/              Repository interface, DemoRepository, SupabaseRepository, query hooks
+    time/ budget/ ordering/ map/ items/ trips/   pure, tested logic
+    supabase/          browser and server clients
+  types/               Zod schemas and inferred types
+e2e/                   Playwright tests
+supabase/
+  migrations/          schema, constraints and Row Level Security
+  tests/               RLS isolation check
+  seed/                demo trip data
+docs/                  product docs and screenshots
+```
+
+## Roadmap
+
+- Google sign-in
+- Place search
+- Import booking PDFs and screenshots into reviewable draft items using AI
+- Travel-time and schedule warnings
+- Read-only trip sharing

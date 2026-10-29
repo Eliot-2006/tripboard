@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, type Browser, type Locator, type Page, test as base } from "@playwright/test";
+import { card, day, dialog, drag, expectBudget, fillAuth, handle, titles } from "./helpers";
 
 // Signed-in flows against the real Supabase project, as the dedicated test account set in .env.local
 // (TEST_USER_EMAIL / TEST_USER_PASSWORD). Without them the whole file is skipped. Every trip made here is named
@@ -66,15 +67,6 @@ async function seedTrip(tripName: string, start = "2027-06-01", end = "2027-06-0
   return data.id as string;
 }
 
-/** Fill the auth form, retrying until the values stick: typing before hydration (slow on WebKit) gets wiped. */
-async function fillAuth(page: Page, address: string, secret: string) {
-  await expect(async () => {
-    await page.getByLabel("Email").fill(address);
-    await page.getByLabel("Password").fill(secret);
-    await expect(page.getByLabel("Email")).toHaveValue(address, { timeout: 500 });
-  }).toPass();
-}
-
 async function logIn(page: Page) {
   await page.goto("/login");
   await fillAuth(page, email!, password!);
@@ -85,34 +77,6 @@ async function logIn(page: Page) {
 
 // Next.js also keeps an empty role=alert route announcer on the page.
 const alert = (scope: Page | Locator) => scope.getByRole("alert").filter({ hasText: /\S/ });
-const dialog = (page: Page) => page.getByRole("dialog");
-const day = (page: Page, n: number) => page.getByRole("region", { name: new RegExp(`^Day ${n} · `) });
-const card = (scope: Page | Locator, title: string) => scope.getByRole("button", { name: new RegExp(`^(?!Move |\\d+\\. ).*${title}`) });
-const handle = (page: Page, title: string) => page.getByRole("button", { name: `Move ${title}` });
-const titles = async (region: Locator) =>
-  (await region.getByRole("button", { name: /^Move / }).evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")))).map(
-    (label) => label!.replace(/^Move /, ""),
-  );
-
-/** A real pointer drag with intermediate moves, as dnd-kit needs to see movement before it starts. */
-async function drag(page: Page, from: Locator, to: Locator, where: "top" | "center" = "center") {
-  await from.scrollIntoViewIfNeeded();
-  const a = (await from.boundingBox())!;
-  const b = (await to.boundingBox())!;
-  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2 + 10, { steps: 5 });
-  await page.mouse.move(b.x + b.width / 2, where === "top" ? b.y + 8 : b.y + b.height / 2, { steps: 20 });
-  await page.mouse.up();
-}
-
-async function expectBudget(page: Page, figures: Record<string, RegExp>) {
-  const budget = page.getByRole("region", { name: "Budget summary" });
-  for (const [label, amount] of Object.entries(figures)) {
-    const term = budget.getByRole("term").filter({ hasText: new RegExp(`^${label}$`) });
-    await expect(term.locator("xpath=following-sibling::dd[1]")).toHaveText(amount);
-  }
-}
 
 async function addItem(page: Page, type: "Flight" | "Stay" | "Activity", fill: (d: Locator) => Promise<void>) {
   await page.getByRole("button", { name: "Add to trip" }).click();
@@ -144,13 +108,15 @@ test("rejects a wrong password next to the form", async ({ page }) => {
   await expect(page).toHaveURL(/\/login$/);
 });
 
-test("signs up a new account and lands on an empty trip list (AUTH-1)", async ({ page }) => {
-  // Creates a throwaway auth user each run; there is no API to remove it from here.
+test("signs up and asks to confirm the email (AUTH-1)", async ({ page }) => {
+  // Supabase's reply when email confirmation is on: a user and no session. Mocked so no real user is created.
+  await page.route("**/auth/v1/signup*", (route) =>
+    route.fulfill({ json: { id: "00000000-0000-4000-8000-000000000000", aud: "authenticated", email: "new@example.com", identities: [{}] } }),
+  );
   await page.goto("/signup");
-  await fillAuth(page, `tripboard-e2e-${Math.random().toString(36).slice(2, 10)}@example.com`, "e2e-password-123");
+  await fillAuth(page, "new@example.com", "e2e-password-123");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/trips$/);
-  await expect(page.getByRole("heading", { name: "No trips yet" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "new@example.com" })).toContainText("confirm your account");
 });
 
 test("creates a trip with validation, opens it, edits dates with a warning, then deletes it (TRIP-2..4, TRIP-6)", async ({ userPage: page }) => {

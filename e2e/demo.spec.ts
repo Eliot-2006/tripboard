@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { card } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/demo");
@@ -26,12 +27,12 @@ test("shows every trip day, the empty state and the Anytime label (ITIN-1, ITIN-
   await expect(page.getByRole("heading", { name: /^Day \d+ · / })).toHaveCount(9);
   await expect(page.getByText("Nothing planned yet.")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Add something" })).toHaveCount(2);
-  await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Explore Akihabara/ })).toContainText("Anytime");
+  await expect(card(page, "Explore Akihabara")).toContainText("Anytime");
 });
 
 test("selecting an item opens its details and Close clears them (ITIN-3)", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Item details" })).toHaveCount(0);
-  await page.getByRole("button", { name: /^(?!Move |\d+\. ).*LAX to Tokyo Haneda/ }).click();
+  await card(page, "LAX to Tokyo Haneda").click();
   const details = page.getByRole("region", { name: "Item details" });
   await expect(details).toContainText("LAX to Tokyo Haneda");
   await expect(details).toContainText("NH7K2Q");
@@ -41,43 +42,43 @@ test("selecting an item opens its details and Close clears them (ITIN-3)", async
 
 test("details expand under the item and a second click collapses them", async ({ page }) => {
   test.skip(await page.getByRole("button", { name: "map", exact: true }).isVisible(), "Inline details are only shown in the desktop layout");
-  const card = page.getByRole("button", { name: /^(?!Move |\d+\. ).*Kaiseki dinner in Gion/ });
-  await card.click();
-  const row = page.getByRole("listitem").filter({ has: card });
+  const item = card(page, "Kaiseki dinner in Gion");
+  await item.click();
+  const row = page.getByRole("listitem").filter({ has: item });
   const details = row.getByRole("region", { name: "Item details" });
   await expect(details).toBeInViewport();
   await expect(details).toContainText("GION-0415");
-  await expect(card).toHaveAttribute("aria-expanded", "true");
-  await expect(card).toHaveAttribute("aria-controls", (await details.getAttribute("id"))!);
-  await card.click();
+  await expect(item).toHaveAttribute("aria-expanded", "true");
+  await expect(item).toHaveAttribute("aria-controls", (await details.getAttribute("id"))!);
+  await item.click();
   await expect(page.getByRole("region", { name: "Item details" })).toHaveCount(0);
-  await expect(card).toHaveAttribute("aria-expanded", "false");
+  await expect(item).toHaveAttribute("aria-expanded", "false");
 });
 
 test("closing the details returns keyboard focus to the item (NFR-4)", async ({ page }) => {
-  const card = page.getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ });
-  await card.focus();
+  const item = card(page, "Senso-ji Temple");
+  await item.focus();
   await page.keyboard.press("Enter");
   const close = page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Close" });
   await close.focus();
   await page.keyboard.press("Enter");
-  await expect(card).toBeFocused();
+  await expect(item).toBeFocused();
 });
 
 test("a selection hidden by the date range does not reopen when the range widens", async ({ page }) => {
-  await page.getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ }).click();
+  await card(page, "Senso-ji Temple").click();
   await page.getByLabel("From day").selectOption("2027-04-14");
   await page.getByRole("button", { name: "Whole trip" }).click();
-  await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toHaveAttribute("aria-expanded", "false");
+  await expect(card(page, "Senso-ji Temple")).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByRole("region", { name: "Item details" })).toHaveCount(0);
 });
 
 test("the date range filters the itinerary and Whole trip restores it (ITIN-4)", async ({ page }) => {
   await page.getByLabel("From day").selectOption("2027-04-14");
-  await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Shinkansen to Kyoto/ })).toBeVisible();
+  await expect(card(page, "Senso-ji Temple")).toHaveCount(0);
+  await expect(card(page, "Shinkansen to Kyoto")).toBeVisible();
   await page.getByRole("button", { name: "Whole trip" }).click();
-  await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toBeVisible();
+  await expect(card(page, "Senso-ji Temple")).toBeVisible();
 });
 
 test("an inverted range is swapped, not emptied", async ({ page }) => {
@@ -85,7 +86,7 @@ test("an inverted range is swapped, not emptied", async ({ page }) => {
   await page.getByLabel("From day").selectOption("2027-04-14");
   await expect(page.getByLabel("From day")).toHaveValue("2027-04-12");
   await expect(page.getByLabel("To day")).toHaveValue("2027-04-14");
-  await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Shinkansen to Kyoto/ })).toBeVisible();
+  await expect(card(page, "Shinkansen to Kyoto")).toBeVisible();
 });
 
 test("the budget counts the whole trip when the range narrows (PRD 4.6)", async ({ page }) => {
@@ -132,7 +133,7 @@ test("shows a text warning, a negative remainder and the type breakdown when ove
   await expect(budget).toContainText("Stays");
   await expect(budget).toContainText("Activities");
 
-  await page.getByRole("button", { name: /^(?!Move |\d+\. ).*Ramen at Ichiran/ }).click();
+  await card(page, "Ramen at Ichiran").click();
   await page.getByRole("region", { name: "Item details" }).getByRole("button", { name: "Edit" }).click();
   await page.getByRole("dialog").getByLabel("Estimated cost (USD)").fill("300");
   await page.getByRole("dialog").getByRole("button", { name: "Save changes" }).click();
