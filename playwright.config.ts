@@ -6,6 +6,8 @@ export default defineConfig({
     command: "npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: true,
+    // A placeholder key turns place search on; its requests are mocked in e2e/items.spec.ts.
+    env: { NEXT_PUBLIC_MAPTILER_KEY: "e2e-key" },
   },
   use: { baseURL: "http://localhost:3000" },
   projects: [
