@@ -3,6 +3,6 @@ import { AuthPage } from "@/components/auth/AuthPage";
 
 export const metadata: Metadata = { title: "Log in · Tripboard" };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string | string[] }> }) {
-  return <AuthPage mode="login" linkError={(await searchParams).error === "link"} />;
+export default function LoginPage() {
+  return <AuthPage mode="login" />;
 }

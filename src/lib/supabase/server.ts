@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { supabaseEnv } from "./env";
 
 /** Supabase for one server request, reading that request's cookies. Needs `supabaseEnv`. */
-export async function createClient() {
+async function createClient() {
   const cookieStore = await cookies();
   return createServerClient(supabaseEnv!.url, supabaseEnv!.key, {
     cookies: {

@@ -31,4 +31,4 @@ export async function proxy(request: NextRequest) {
 }
 
 // Only the pages that use accounts. The demo never touches Supabase (DEMO-1).
-export const config = { matcher: ["/", "/login", "/signup", "/auth/confirm", "/forgot-password", "/reset-password", "/trips/:path*"] };
+export const config = { matcher: ["/", "/login", "/signup", "/trips/:path*"] };
