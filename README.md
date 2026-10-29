@@ -104,6 +104,7 @@ The demo at `/demo` works without any environment variables. For accounts, set t
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
 | `NEXT_PUBLIC_MAP_TILE_URL` | Optional. Tile URL template, defaults to OpenStreetMap |
 | `NEXT_PUBLIC_MAP_ATTRIBUTION` | Optional. Attribution for the tile provider |
+| `ANTHROPIC_API_KEY` | Optional, server-only. Turns on "Import booking" for signed-in trips (PDF or screenshot read by Claude, reviewed before anything is added). Unset hides the action. Set a spend limit on the key: there is no per-user rate limit yet |
 
 Scripts:
 

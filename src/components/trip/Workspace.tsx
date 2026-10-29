@@ -6,6 +6,7 @@ import { BudgetSummary } from "@/components/budget/BudgetSummary";
 import { DateRangeControl } from "@/components/itinerary/DateRangeControl";
 import { DeleteItemDialog } from "@/components/itinerary/DeleteItemDialog";
 import { DetailSheet } from "@/components/itinerary/DetailSheet";
+import { ImportDialog } from "@/components/itinerary/ImportDialog";
 import { ItemDialog, type ItemEditor } from "@/components/itinerary/ItemDialog";
 import { Itinerary } from "@/components/itinerary/Itinerary";
 import { LazyMap } from "@/components/map/LazyMap";
@@ -31,11 +32,13 @@ type Props = {
   onTripDeleted?: () => void;
   /** Offers "Share" for a read-only link. Left out where the trip can't be shared, such as the demo. */
   canShare?: boolean;
+  /** Offers "Import booking" (reads a PDF or screenshot on the server). Only set when the server has an API key. */
+  canImport?: boolean;
   /** A shared view: nothing can be added, edited, moved or deleted, and the budget stays hidden. */
   readOnly?: boolean;
 };
 
-export function Workspace({ tripId, nav, onTripDeleted, canShare, readOnly }: Props) {
+export function Workspace({ tripId, nav, onTripDeleted, canShare, canImport, readOnly }: Props) {
   const trip = useTrip(tripId);
   const items = useItems(tripId);
   const [range, setRawRange] = useState<Range>(null);
@@ -47,6 +50,7 @@ export function Workspace({ tripId, nav, onTripDeleted, canShare, readOnly }: Pr
   const [deleting, setDeleting] = useState<Item | null>(null);
   const [tripEditor, setTripEditor] = useState<TripEditor | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [importing, setImporting] = useState(false);
   // Read out by screen readers after an add, edit or delete (the list changes silently otherwise).
   const [announcement, setAnnouncement] = useState("");
   const [moveError, setMoveError] = useState<string | null>(null);
@@ -154,6 +158,7 @@ export function Workspace({ tripId, nav, onTripDeleted, canShare, readOnly }: Pr
         nav={nav}
         readOnly={readOnly}
         onShare={canShare ? () => setSharing(true) : undefined}
+        onImport={canImport ? () => setImporting(true) : undefined}
         onAdd={() => setEditor({ mode: "add", day: effective.start })}
         onEdit={() => setTripEditor({ mode: "edit", trip: t, items: all })}
       />
@@ -250,6 +255,15 @@ export function Workspace({ tripId, nav, onTripDeleted, canShare, readOnly }: Pr
           }}
           onDeleted={onTripDeleted}
         />
+        {canImport && (
+          <ImportDialog
+            trip={t}
+            items={all}
+            open={importing}
+            onClose={() => setImporting(false)}
+            onImported={(n) => setAnnouncement(`Added ${n} ${n === 1 ? "booking" : "bookings"} from your file`)}
+          />
+        )}
         <ItemDialog trip={t} items={all} editor={editor} onClose={() => setEditor(null)} onSaved={showSaved} />
         <DeleteItemDialog
           tripId={t.id}

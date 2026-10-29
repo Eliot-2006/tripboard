@@ -7,13 +7,14 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { Workspace } from "@/components/trip/Workspace";
 
 /** A signed-in user's trip: the workspace on Supabase, with a way back to all trips (TRIP-6). */
-export function AccountWorkspace({ tripId }: { tripId: string }) {
+export function AccountWorkspace({ tripId, canImport }: { tripId: string; canImport?: boolean }) {
   const router = useRouter();
   return (
     <AccountProvider>
       <Workspace
         tripId={tripId}
         canShare
+        canImport={canImport}
         nav={
           <>
             <Link
