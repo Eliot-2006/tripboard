@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
+import { card } from "./helpers";
 
 const pins = (page: Page) => page.locator(".leaflet-marker-icon");
 
@@ -15,6 +16,10 @@ test("shows a numbered pin per mappable item, a legend and attribution (MAP-1, M
   await expect(page.getByRole("button", { name: "1. LAX to Tokyo Haneda" })).toContainText("1");
   await expect(page.getByRole("list", { name: /Map legend/ }).getByRole("listitem")).toHaveCount(7);
   await expect(page.locator(".leaflet-control-attribution")).toContainText("OpenStreetMap");
+  const usesMapTiler = (await page.locator(".leaflet-tile").first().getAttribute("src"))?.includes("api.maptiler.com");
+  const logo = page.getByRole("link", { name: "MapTiler", exact: true });
+  if (usesMapTiler) await expect(logo).toBeVisible();
+  else await expect(logo).toHaveCount(0);
   // Lines between stops and arcs for flights (MAP-3).
   await expect(page.locator(".leaflet-overlay-pane path")).not.toHaveCount(0);
 });
@@ -34,11 +39,11 @@ test("a pin selects its item, and selecting an item highlights its pin (MAP-4)",
   const sensoji = page.getByRole("button", { name: "4. Senso-ji Temple" });
   await sensoji.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("button", { name: /^(?!Move |\d+\. ).*Senso-ji Temple/ })).toHaveAttribute("aria-expanded", "true");
+  await expect(card(page, "Senso-ji Temple")).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("region", { name: "Item details" })).toContainText("Senso-ji Temple");
   await expect(sensoji.locator(".tripboard-pin")).toHaveClass(/is-selected/);
 
-  await page.getByRole("button", { name: /^(?!Move |\d+\. ).*teamLab Planets/ }).click();
+  await card(page, "teamLab Planets").click();
   await expect(page.getByRole("button", { name: "5. teamLab Planets" }).locator(".tripboard-pin")).toHaveClass(/is-selected/);
   await expect(sensoji.locator(".tripboard-pin")).not.toHaveClass(/is-selected/);
 });
@@ -46,7 +51,7 @@ test("a pin selects its item, and selecting an item highlights its pin (MAP-4)",
 test("items without coordinates stay off the map", async ({ page }) => {
   test.skip(await page.getByRole("button", { name: "map", exact: true }).isVisible(), "This cross-panel check requires the side-by-side desktop layout");
   await page.getByRole("button", { name: "Add to trip" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: /^(?!Move |\d+\. ).*Activity/ }).click();
+  await card(page.getByRole("dialog"), "Activity").click();
   await page.getByRole("dialog").getByLabel("Name", { exact: true }).fill("Laundry");
   await page.getByRole("dialog").getByLabel("No exact time").check();
   await page.getByRole("dialog").getByRole("button", { name: "Add activity" }).click();
