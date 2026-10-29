@@ -28,10 +28,11 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { BedDouble, ChevronDown, GripVertical } from "lucide-react";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { BedDouble, ChevronDown, GripVertical, Hourglass, TriangleAlert } from "lucide-react";
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { dayColor, dayTextColor } from "@/lib/map/colors";
+import { scheduleNotes, type ScheduleNote } from "@/lib/schedule";
 import { dayDiff, formatDay, formatItemTime } from "@/lib/time";
 import { cn } from "cn";
 import type { Item } from "@/types";
@@ -231,6 +232,7 @@ export function Itinerary(props: Props) {
         {days.map((day) => {
           const dayIndex = dayDiff(tripStart, day);
           const list = dayItems(day);
+          const notes = scheduleNotes(list);
           const closed = collapsed.has(day);
           const bodyId = `day-body-${day}`;
           return (
@@ -290,45 +292,47 @@ export function Itinerary(props: Props) {
                       <SortableContext items={list.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                         <ul className="flex flex-col">
                           {list.map((item) => (
-                            <SortableRow
-                              key={item.id}
-                              item={item}
-                              day={day}
-                              marker={marker?.id === item.id ? (marker.after ? "after" : "before") : null}
-                            >
-                              <ItemCard
-                                ref={item.id === selectedId ? selectedCard : undefined}
+                            <Fragment key={item.id}>
+                              {notes[item.id] && <ScheduleNoteRow note={notes[item.id]} />}
+                              <SortableRow
                                 item={item}
-                                currency={currency}
-                                selected={item.id === selectedId}
-                                onSelect={() => onSelect(item.id === selectedId ? null : item.id)}
-                                detailsId={`details-${item.id}`}
-                              />
-                              {/* Expanded card under the selection, so it opens where the user clicked (ITIN-3). */}
-                              {inlineDetails && item.id === selectedId && (
-                                <DetailCard
-                                  id={`details-${item.id}`}
+                                day={day}
+                                marker={marker?.id === item.id ? (marker.after ? "after" : "before") : null}
+                              >
+                                <ItemCard
+                                  ref={item.id === selectedId ? selectedCard : undefined}
                                   item={item}
                                   currency={currency}
-                                  days={tripDays}
-                                  tripStart={tripStart}
-                                  onClose={close}
-                                  onEdit={() => onEdit(item)}
-                                  onDuplicate={() => {
-                                    void onDuplicate(item).then((copy) => {
-                                      if (!copy) return;
-                                      refocus.current = { id: copy.id, on: "card" };
-                                      onSelect(copy.id);
-                                    });
-                                  }}
-                                  onDelete={() => onDelete(item)}
-                                  onMoveToDay={(d) => {
-                                    refocus.current = { id: item.id, on: "card" };
-                                    onMoveToDay(item, d);
-                                  }}
+                                  selected={item.id === selectedId}
+                                  onSelect={() => onSelect(item.id === selectedId ? null : item.id)}
+                                  detailsId={`details-${item.id}`}
                                 />
-                              )}
-                            </SortableRow>
+                                {/* Expanded card under the selection, so it opens where the user clicked (ITIN-3). */}
+                                {inlineDetails && item.id === selectedId && (
+                                  <DetailCard
+                                    id={`details-${item.id}`}
+                                    item={item}
+                                    currency={currency}
+                                    days={tripDays}
+                                    tripStart={tripStart}
+                                    onClose={close}
+                                    onEdit={() => onEdit(item)}
+                                    onDuplicate={() => {
+                                      void onDuplicate(item).then((copy) => {
+                                        if (!copy) return;
+                                        refocus.current = { id: copy.id, on: "card" };
+                                        onSelect(copy.id);
+                                      });
+                                    }}
+                                    onDelete={() => onDelete(item)}
+                                    onMoveToDay={(d) => {
+                                      refocus.current = { id: item.id, on: "card" };
+                                      onMoveToDay(item, d);
+                                    }}
+                                  />
+                                )}
+                              </SortableRow>
+                            </Fragment>
                           ))}
                         </ul>
                         <EndSlot day={day} dragging={dragging !== null} />
@@ -353,7 +357,19 @@ export function Itinerary(props: Props) {
   );
 }
 
-type DaySectionProps = { day: string; line: string; empty: boolean; highlighted: boolean; children: ReactNode };
+/** A derived row between two cards, like "Staying at …": free time is quiet, an overlap or tight connection is bolder. */
+function ScheduleNoteRow({ note }: { note: ScheduleNote }) {
+  const Icon = note.kind === "free" ? Hourglass : TriangleAlert;
+  return (
+    <li className={cn("relative flex items-center gap-1.5 py-1.5 pl-10 text-sm", note.kind === "free" ? "text-muted-foreground" : "font-medium")}>
+      <span aria-hidden className={`${segment} inset-y-0`} />
+      <Icon className="size-3.5 shrink-0" aria-hidden />
+      {note.text}
+    </li>
+  );
+}
+
+type DaySectionProps ={ day: string; line: string; empty: boolean; highlighted: boolean; children: ReactNode };
 
 /**
  * An empty day is a drop target itself. A day with items is targeted through its items, so a keyboard drag moves
