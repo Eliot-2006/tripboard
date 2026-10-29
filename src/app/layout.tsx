@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import "./globals.css";
 
@@ -12,6 +12,14 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   title: "Tripboard",
   description: "Plan a whole trip in one place: a day-by-day itinerary with a map.",
+};
+
+// The --background tokens in globals.css, light and dark, so the phone's browser bar matches the page.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1117" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
