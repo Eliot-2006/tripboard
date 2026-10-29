@@ -10,6 +10,7 @@ export const makeTrip = (over: Partial<Trip> = {}): Trip => ({
   destinations: [],
   currency: "USD",
   total_budget: null,
+  share_token: null,
   created_at: SEED_STAMP,
   updated_at: SEED_STAMP,
   ...over,

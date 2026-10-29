@@ -13,6 +13,7 @@ export function AccountWorkspace({ tripId }: { tripId: string }) {
     <AccountProvider>
       <Workspace
         tripId={tripId}
+        canShare
         nav={
           <>
             <Link

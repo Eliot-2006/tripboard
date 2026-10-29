@@ -60,6 +60,8 @@ type Props = {
   /** Drag and drop: put the item on `day` at `index` among that day's other items (ITIN-5, ITIN-6). */
   onMove: (item: Item, day: string, index: number) => void;
   onMoveToDay: (item: Item, day: string) => void;
+  /** A shared view: no adding, no drag handles, and details without private fields or actions. */
+  readOnly?: boolean;
 };
 
 /** What a drop target is: a day (when empty), the end of a day, or an item (by its id) on a day. */
@@ -84,7 +86,7 @@ const instructions =
   "then press space or enter to drop it, or escape to cancel.";
 
 export function Itinerary(props: Props) {
-  const { tripStart, tripDays, days, items, staying, inlineDetails, currency, selectedId } = props;
+  const { tripStart, tripDays, days, items, staying, inlineDetails, currency, selectedId, readOnly } = props;
   const { onSelect, onAdd, onEdit, onDuplicate, onDelete, onMove, onMoveToDay } = props;
   const selectedCard = useRef<HTMLButtonElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -284,9 +286,11 @@ export function Itinerary(props: Props) {
                     {list.length === 0 ? (
                       <div className="mt-2 ml-8 flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
                         <span>{dragging ? "Drop here to move it to this day." : "Nothing planned yet."}</span>
-                        <Button variant="outline" className="min-h-11 px-4" onClick={() => onAdd(day)}>
-                          Add something
-                        </Button>
+                        {!readOnly && (
+                          <Button variant="outline" className="min-h-11 px-4" onClick={() => onAdd(day)}>
+                            Add something
+                          </Button>
+                        )}
                       </div>
                     ) : (
                       <SortableContext items={list.map((i) => i.id)} strategy={verticalListSortingStrategy}>
@@ -297,6 +301,7 @@ export function Itinerary(props: Props) {
                               <SortableRow
                                 item={item}
                                 day={day}
+                                readOnly={readOnly}
                                 marker={marker?.id === item.id ? (marker.after ? "after" : "before") : null}
                               >
                                 <ItemCard
@@ -315,6 +320,7 @@ export function Itinerary(props: Props) {
                                     currency={currency}
                                     days={tripDays}
                                     tripStart={tripStart}
+                                    readOnly={readOnly}
                                     onClose={close}
                                     onEdit={() => onEdit(item)}
                                     onDuplicate={() => {
@@ -410,9 +416,9 @@ function EndSlot({ day, dragging }: { day: string; dragging: boolean }) {
 }
 
 /** A station: the card with a drag handle at its end, its details below, and the day's line through both. */
-type RowProps = { item: Item; day: string; marker: "before" | "after" | null; children: [ReactNode, ReactNode] };
+type RowProps = { item: Item; day: string; marker: "before" | "after" | null; readOnly?: boolean; children: [ReactNode, ReactNode] };
 
-function SortableRow({ item, day, marker, children }: RowProps) {
+function SortableRow({ item, day, marker, readOnly, children }: RowProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     data: { day } satisfies DropData,
@@ -435,17 +441,19 @@ function SortableRow({ item, day, marker, children }: RowProps) {
       )}
       <div className="flex items-stretch">
         <div className="min-w-0 flex-1">{card}</div>
-        <button
-          ref={setActivatorNodeRef}
-          type="button"
-          data-drag-handle
-          {...attributes}
-          {...listeners}
-          aria-label={`Move ${item.title}`}
-          className="flex w-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 active:cursor-grabbing"
-        >
-          <GripVertical className="size-4" aria-hidden />
-        </button>
+        {!readOnly && (
+          <button
+            ref={setActivatorNodeRef}
+            type="button"
+            data-drag-handle
+            {...attributes}
+            {...listeners}
+            aria-label={`Move ${item.title}`}
+            className="flex w-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 active:cursor-grabbing"
+          >
+            <GripVertical className="size-4" aria-hidden />
+          </button>
+        )}
       </div>
       {details}
     </li>

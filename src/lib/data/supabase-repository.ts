@@ -3,6 +3,7 @@ import { shiftItemToDay } from "@/lib/time";
 import { ItemSchema, NewItemSchema, NewTripSchema, TripSchema } from "@/types/schemas";
 import type { Item, ItemPatch, NewItem, NewTrip, Trip } from "@/types";
 import { defined, type Repository } from "./repository";
+import { toSharedTrip } from "./shared";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -88,6 +89,25 @@ export class SupabaseRepository implements Repository {
   async moveItem(id: string, day: string, position: number) {
     const item = await this.getItem(id);
     return this.updateItem(id, { day, position, ...shiftItemToDay(item, day) });
+  }
+
+  // The database replaces whatever is written to share_token with a token it generates, so these only say "new" or "none".
+  async enableSharing(tripId: string) {
+    return this.setShareToken(tripId, crypto.randomUUID());
+  }
+
+  async revokeSharing(tripId: string) {
+    return this.setShareToken(tripId, null);
+  }
+
+  async getSharedTrip(token: string) {
+    if (!UUID.test(token)) return null;
+    return toSharedTrip(must(await this.db.rpc("get_shared_trip", { p_token: token })), token);
+  }
+
+  private async setShareToken(tripId: string, share_token: string | null) {
+    if (!UUID.test(tripId)) throw new Error(`Trip not found: ${tripId}`);
+    return toTrip(must(await this.db.from("trips").update({ share_token }).eq("id", tripId).select().single()));
   }
 
   private async getItem(id: string) {

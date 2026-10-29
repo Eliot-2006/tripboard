@@ -27,6 +27,12 @@ export function useItems(tripId: string) {
   return useQuery({ queryKey: keys.items(tripId), queryFn: () => repo.getItems(tripId) });
 }
 
+/** A share link's trip. Fetched once per page load: the page shows a snapshot, so a refetch would only reset the view. */
+export function useSharedTrip(token: string) {
+  const repo = useRepository();
+  return useQuery({ queryKey: ["shared", token] as const, queryFn: () => repo.getSharedTrip(token), staleTime: Infinity });
+}
+
 /** A write through the repository that refetches the queries under `refresh` once it is saved. */
 function useRepoMutation<V, R>(run: (repo: Repository, vars: V) => Promise<R>, ...refresh: (readonly string[])[]) {
   const repo = useRepository();
@@ -44,6 +50,11 @@ export const useUpdateTrip = () =>
   useRepoMutation((r, v: { id: string; patch: Partial<NewTrip> }) => r.updateTrip(v.id, v.patch), keys.trips, ["trip"]);
 
 export const useDeleteTrip = () => useRepoMutation((r, id: string) => r.deleteTrip(id), keys.trips, ["trip"]);
+
+// Turning sharing on, replacing the link or turning it off changes the trip's share_token.
+export const useEnableSharing = () => useRepoMutation((r, tripId: string) => r.enableSharing(tripId), keys.trips, ["trip"]);
+
+export const useRevokeSharing = () => useRepoMutation((r, tripId: string) => r.revokeSharing(tripId), keys.trips, ["trip"]);
 
 export const useCreateItem = (tripId: string) =>
   useRepoMutation((r, input: NewItem) => r.createItem(input), keys.items(tripId));

@@ -9,6 +9,7 @@ import { DetailSheet } from "@/components/itinerary/DetailSheet";
 import { ItemDialog, type ItemEditor } from "@/components/itinerary/ItemDialog";
 import { Itinerary } from "@/components/itinerary/Itinerary";
 import { LazyMap } from "@/components/map/LazyMap";
+import { ShareDialog } from "@/components/trip/ShareDialog";
 import { TripDialog, type TripEditor } from "@/components/trip/TripDialog";
 import { GUTTER, TripHeader } from "@/components/trip/TripHeader";
 import { TripLoading, TripMessage } from "@/components/trip/WorkspaceState";
@@ -28,9 +29,13 @@ type Props = {
   nav?: ReactNode;
   /** Offers "Delete trip" when editing the trip, and runs once it is gone. */
   onTripDeleted?: () => void;
+  /** Offers "Share" for a read-only link. Left out where the trip can't be shared, such as the demo. */
+  canShare?: boolean;
+  /** A shared view: nothing can be added, edited, moved or deleted, and the budget stays hidden. */
+  readOnly?: boolean;
 };
 
-export function Workspace({ tripId, nav, onTripDeleted }: Props) {
+export function Workspace({ tripId, nav, onTripDeleted, canShare, readOnly }: Props) {
   const trip = useTrip(tripId);
   const items = useItems(tripId);
   const [range, setRawRange] = useState<Range>(null);
@@ -41,6 +46,7 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
   const [editor, setEditor] = useState<ItemEditor | null>(null);
   const [deleting, setDeleting] = useState<Item | null>(null);
   const [tripEditor, setTripEditor] = useState<TripEditor | null>(null);
+  const [sharing, setSharing] = useState(false);
   // Read out by screen readers after an add, edit or delete (the list changes silently otherwise).
   const [announcement, setAnnouncement] = useState("");
   const [moveError, setMoveError] = useState<string | null>(null);
@@ -146,12 +152,16 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
         trip={t}
         days={days}
         nav={nav}
+        readOnly={readOnly}
+        onShare={canShare ? () => setSharing(true) : undefined}
         onAdd={() => setEditor({ mode: "add", day: effective.start })}
         onEdit={() => setTripEditor({ mode: "edit", trip: t, items: all })}
       />
       <div className={cn("flex flex-wrap items-end justify-between gap-x-10 gap-y-3 border-b py-3 sm:gap-y-5 sm:py-5", GUTTER)}>
         {/* Budget counts every item in the trip, not just the visible range (PRD 4.6). */}
-        <BudgetSummary items={all} totalBudget={t.total_budget} currency={t.currency} className="min-w-0 flex-1 basis-[28rem]" />
+        {!readOnly && (
+          <BudgetSummary items={all} totalBudget={t.total_budget} currency={t.currency} className="min-w-0 flex-1 basis-[28rem]" />
+        )}
         <DateRangeControl trip={t} range={range} onChange={setRange} />
       </div>
 
@@ -200,6 +210,7 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
             onDelete={setDeleting}
             onMove={moveTo}
             onMoveToDay={(item, day) => runMove(planMoveToDay(item, day, all))}
+            readOnly={readOnly}
           />
         </section>
         <section
@@ -215,6 +226,7 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
         currency={t.currency}
         days={tripDays}
         tripStart={t.start_date}
+        readOnly={readOnly}
         onClose={() => select(null)}
         onEdit={() => selectedItem && setEditor({ mode: "edit", item: selectedItem })}
         onDuplicate={async () => {
@@ -225,30 +237,35 @@ export function Workspace({ tripId, nav, onTripDeleted }: Props) {
         onDelete={() => selectedItem && setDeleting(selectedItem)}
         onMoveToDay={(day) => selectedItem && runMove(planMoveToDay(selectedItem, day, all))}
       />
-      <TripDialog
-        editor={tripEditor}
-        onClose={() => setTripEditor(null)}
-        onSaved={(trip) => {
-          setTripEditor(null);
-          // New dates can leave the chosen range behind, so show the whole trip again.
-          setRange(null);
-          setAnnouncement(`Saved “${trip.name}”`);
-        }}
-        onDeleted={onTripDeleted}
-      />
-      <ItemDialog trip={t} items={all} editor={editor} onClose={() => setEditor(null)} onSaved={showSaved} />
-      <DeleteItemDialog
-        tripId={t.id}
-        item={deleting}
-        onClose={() => setDeleting(null)}
-        onDeleted={(item) => {
-          setDeleting(null);
-          select(null);
-          setAnnouncement(`Deleted “${item.title}”`);
-        }}
-        // Focus stays where the item was: its day's toggle.
-        afterDeleteFocus={(item) => document.getElementById(`day-${item.day}`)?.querySelector("button") ?? null}
-      />
+      {!readOnly && (
+        <>
+        <TripDialog
+          editor={tripEditor}
+          onClose={() => setTripEditor(null)}
+          onSaved={(trip) => {
+            setTripEditor(null);
+            // New dates can leave the chosen range behind, so show the whole trip again.
+            setRange(null);
+            setAnnouncement(`Saved “${trip.name}”`);
+          }}
+          onDeleted={onTripDeleted}
+        />
+        <ItemDialog trip={t} items={all} editor={editor} onClose={() => setEditor(null)} onSaved={showSaved} />
+        <DeleteItemDialog
+          tripId={t.id}
+          item={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={(item) => {
+            setDeleting(null);
+            select(null);
+            setAnnouncement(`Deleted “${item.title}”`);
+          }}
+          // Focus stays where the item was: its day's toggle.
+          afterDeleteFocus={(item) => document.getElementById(`day-${item.day}`)?.querySelector("button") ?? null}
+        />
+        </>
+      )}
+      {canShare && <ShareDialog trip={t} open={sharing} onClose={() => setSharing(false)} />}
       <p role="status" className="sr-only">
         {announcement}
       </p>

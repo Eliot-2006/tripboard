@@ -120,5 +120,66 @@ export function runRepositoryContract(name: string, setup: () => Promise<{ repo:
       expect(moved.start_at).toBe("2027-04-13T00:00:00.000Z");
       expect(moved.end_at).toBe("2027-04-13T02:00:00.000Z");
     });
+
+    it("shares a trip by token, shows no private fields, and stops when revoked or replaced", async () => {
+      const { repo, trip } = await setup();
+      await repo.createItem(
+        makeNewItem({
+          trip_id: trip.id,
+          title: "Ramen night",
+          start_location_name: "Ramen-ya",
+          start_lat: 35.6,
+          start_lng: 139.7,
+          notes: "SECRET-NOTES",
+          confirmation_number: "SECRET-CONF",
+          estimated_cost: 111.11,
+          actual_cost: 222.22,
+          status: "reserved",
+          payment_status: "paid",
+          metadata: { category: "restaurant", seat: "SECRET-SEAT" },
+        }),
+      );
+      expect(await repo.getSharedTrip(crypto.randomUUID())).toBeNull();
+      expect(await repo.getSharedTrip("not-a-token")).toBeNull();
+
+      const first = (await repo.enableSharing(trip.id)).share_token!;
+      expect(first).toMatch(/^[0-9a-f-]{36}$/);
+      expect((await repo.getTrip(trip.id))?.share_token).toBe(first);
+
+      const shared = (await repo.getSharedTrip(first))!;
+      expect(shared.trip).toMatchObject({ name: trip.name, start_date: trip.start_date, total_budget: null, share_token: null });
+      expect(shared.items).toHaveLength(1);
+      expect(shared.items[0]).toMatchObject({
+        title: "Ramen night",
+        start_location_name: "Ramen-ya",
+        start_lat: 35.6,
+        status: "reserved",
+        metadata: { category: "restaurant" },
+        notes: null,
+        confirmation_number: null,
+        estimated_cost: null,
+        actual_cost: null,
+        payment_status: "unpaid",
+      });
+      const everything = JSON.stringify(shared);
+      for (const secret of ["SECRET", "111.11", "222.22", `"${trip.id}"`, `"${trip.user_id}"`]) {
+        expect(everything).not.toContain(secret);
+      }
+
+      // A new link replaces the old one.
+      const second = (await repo.enableSharing(trip.id)).share_token!;
+      expect(second).not.toBe(first);
+      expect(await repo.getSharedTrip(first)).toBeNull();
+      expect(await repo.getSharedTrip(second)).not.toBeNull();
+
+      expect((await repo.revokeSharing(trip.id)).share_token).toBeNull();
+      expect(await repo.getSharedTrip(second)).toBeNull();
+    });
+
+    it("rejects sharing a trip that does not exist", async () => {
+      const { repo } = await setup();
+      await expect(repo.enableSharing(crypto.randomUUID())).rejects.toThrow();
+      await expect(repo.revokeSharing(crypto.randomUUID())).rejects.toThrow();
+    });
   });
 }
