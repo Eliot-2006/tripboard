@@ -1,8 +1,8 @@
 -- AUTH-5: one user cannot read or change another user's trips or items.
 -- Share links: logged-out visitors read nothing from the tables, and get_shared_trip() returns no private fields.
 -- Paste into the Supabase SQL Editor (or run with psql). It runs in a transaction that is rolled back, so it leaves
--- nothing behind. Any leak stops it with an error starting "LEAK:". On success the last result row is
--- trips_a_sees = 1, items_a_sees = 1 and every other column 0.
+-- nothing behind. Any leak stops it with an error starting "LEAK:" (or "FAIL:"). On success the last result row
+-- reads "rls_isolation: all checks passed".
 
 begin;
 
@@ -55,11 +55,14 @@ declare
   hidden text;
 begin
   if shared is null then raise exception 'FAIL: a valid token returned nothing'; end if;
-  if shared #>> '{trip,name}' <> 'A trip' or jsonb_array_length(shared -> 'items') <> 1 then
+  -- IS DISTINCT FROM, not <>: a missing field is SQL null, and `null <> x` would let the check pass.
+  if shared #>> '{trip,name}' is distinct from 'A trip' or jsonb_array_length(shared -> 'items') is distinct from 1 then
     raise exception 'FAIL: wrong trip or items: %', shared;
   end if;
-  if shared #>> '{items,0,title}' <> 'A item' or shared #>> '{items,0,start_location_name}' <> 'Public place'
-     or (shared #>> '{items,0,start_lat}')::float8 <> 35.5 or shared #>> '{items,0,metadata,category}' <> 'restaurant' then
+  if shared #>> '{items,0,title}' is distinct from 'A item'
+     or shared #>> '{items,0,start_location_name}' is distinct from 'Public place'
+     or (shared #>> '{items,0,start_lat}')::float8 is distinct from 35.5
+     or shared #>> '{items,0,metadata,category}' is distinct from 'restaurant' then
     raise exception 'FAIL: display fields missing: %', shared;
   end if;
   -- Field names (as JSON keys) and values that must never appear anywhere in the result.
@@ -75,7 +78,7 @@ begin
   ] loop
     if shared::text like '%' || hidden || '%' then raise exception 'LEAK: shared trip contains %', hidden; end if;
   end loop;
-  if shared #> '{items,0,metadata}' <> '{"category":"restaurant"}' then
+  if shared #> '{items,0,metadata}' is distinct from '{"category":"restaurant"}'::jsonb then
     raise exception 'LEAK: metadata not reduced to the category: %', shared #> '{items,0,metadata}';
   end if;
 end $$;
@@ -162,19 +165,30 @@ end $$;
 set local role authenticated;
 
 -- Reads and writes on B's rows match nothing.
-with
-  renamed as (update public.trips set name = 'hacked' where id = '10000000-0000-4000-8000-00000000000b' returning 1),
-  edited as (update public.itinerary_items set title = 'hacked' where id = '20000000-0000-4000-8000-00000000000b' returning 1),
-  wiped as (delete from public.itinerary_items where id = '20000000-0000-4000-8000-00000000000b' returning 1),
-  dropped as (delete from public.trips where id = '10000000-0000-4000-8000-00000000000b' returning 1)
-select
-  (select count(*) from public.trips) as trips_a_sees,
-  (select count(*) from public.trips where id = '10000000-0000-4000-8000-00000000000b') as b_trips_a_sees,
-  (select count(*) from public.itinerary_items) as items_a_sees,
-  (select count(*) from public.itinerary_items where id = '20000000-0000-4000-8000-00000000000b') as b_items_a_sees,
-  (select count(*) from renamed) as b_trips_renamed,
-  (select count(*) from edited) as b_items_edited,
-  (select count(*) from wiped) as b_items_deleted,
-  (select count(*) from dropped) as b_trips_deleted;
+do $$
+declare counts int[];
+begin
+  with
+    renamed as (update public.trips set name = 'hacked' where id = '10000000-0000-4000-8000-00000000000b' returning 1),
+    edited as (update public.itinerary_items set title = 'hacked' where id = '20000000-0000-4000-8000-00000000000b' returning 1),
+    wiped as (delete from public.itinerary_items where id = '20000000-0000-4000-8000-00000000000b' returning 1),
+    dropped as (delete from public.trips where id = '10000000-0000-4000-8000-00000000000b' returning 1)
+  select array[
+    (select count(*) from public.trips),
+    (select count(*) from public.trips where id = '10000000-0000-4000-8000-00000000000b'),
+    (select count(*) from public.itinerary_items),
+    (select count(*) from public.itinerary_items where id = '20000000-0000-4000-8000-00000000000b'),
+    (select count(*) from renamed),
+    (select count(*) from edited),
+    (select count(*) from wiped),
+    (select count(*) from dropped)
+  ] into counts;
+  -- A sees their own trip and item, and nothing of B's.
+  if counts is distinct from array[1, 0, 1, 0, 0, 0, 0, 0] then
+    raise exception 'LEAK: A reached B''s rows. [trips, B trips, items, B items, renamed, edited, deleted items, deleted trips] = %', counts;
+  end if;
+end $$;
+
+select 'rls_isolation: all checks passed' as result;
 
 rollback;
