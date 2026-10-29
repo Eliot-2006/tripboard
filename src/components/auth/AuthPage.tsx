@@ -6,17 +6,15 @@ import { Unavailable } from "@/components/Unavailable";
 import { currentUser } from "@/lib/supabase/server";
 import { cn } from "cn";
 
-/** Account pages share availability and session checks. */
-export async function AuthPage({ mode, linkError }: { mode: "login" | "signup" | "forgot-password" | "reset-password"; linkError?: boolean }) {
+/** The log in and sign up pages. Someone already signed in goes straight to their trips. */
+export async function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const user = await currentUser();
   if (user.unavailable) return <Unavailable />;
-  if (mode === "reset-password") {
-    if (!user.id) redirect("/forgot-password");
-  } else if (user.id) redirect("/trips");
+  if (user.id) redirect("/trips");
   return (
     <AccountShell>
       <div className={cn("flex flex-1 flex-col py-12 sm:py-16", GUTTER)}>
-        <AuthForm mode={mode} linkError={linkError} />
+        <AuthForm mode={mode} />
       </div>
     </AccountShell>
   );

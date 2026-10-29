@@ -41,10 +41,10 @@ export async function expectBudget(page: Page, figures: Record<string, string | 
 }
 
 /** Fill the auth form, retrying until the values stick: typing before hydration (slow on WebKit) gets wiped. */
-export async function fillAuth(page: Page, address: string, secret?: string) {
+export async function fillAuth(page: Page, address: string, secret: string) {
   await expect(async () => {
     await page.getByLabel("Email").fill(address);
-    if (secret) await page.getByLabel("Password").fill(secret);
+    await page.getByLabel("Password").fill(secret);
     await expect(page.getByLabel("Email")).toHaveValue(address, { timeout: 500 });
   }).toPass();
 }

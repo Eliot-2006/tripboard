@@ -34,7 +34,7 @@ The user commits and pushes themselves (global CLAUDE.md). Workers do not commit
 | P1 | Link preview, app icon, MapTiler logo (free-plan requirement) | V1 DoD | P0 | T7 | DONE | Codex · feat/link-preview-map-logo | Static opengraph-image.png, icon.svg, apple-icon.png; logo only when tiles are MapTiler |
 | P2 | Portfolio README and fresh screenshots | V1 DoD | P0 | T7 | DONE | Sonnet subagent | Screenshots predate the map logo |
 | P3 | Ponytail cleanup: shared e2e helpers | – | – | – | DONE | orchestrator | e2e/helpers.ts; account spec now gets the drag-centering fix |
-| A1 | Password reset, email-link landing, unconfirmed-email message | AUTH-1..3 | P0 | – | DONE | Codex · feat/password-reset | token_hash flow (/auth/confirm), /forgot-password, /reset-password. Needs user: Resend SMTP, Confirm email on, two email templates |
+| A1 | Password reset, email-link landing, unconfirmed-email message | AUTH-1..3 | P1 | email sender | BACKLOG | Codex · built in a496912, then removed | Removed until the user sets up a dedicated sender email (Brevo or a domain). Restore from a496912 and 7893769 (e2e/password.spec.ts); then SMTP, Confirm email on, two email templates |
 | A2 | Keep the free Supabase project awake | NFR | P0 | T7 | DONE | orchestrator | Daily Vercel cron → /api/keepalive |
 | A3 | Remove disposable test users; sign-up test no longer creates users | – | – | – | DONE | orchestrator | Deleted 94 tripboard-e2e users (approved). Sign-up e2e mocks Supabase |
 | T8 | Sign in with Google | AUTH-4 | P1 | – | BLOCKED | | Needs Google OAuth client configured in Supabase by the user |
