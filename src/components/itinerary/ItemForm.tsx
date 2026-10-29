@@ -13,9 +13,11 @@ import {
   itemFormSchema,
   type ItemFormValues,
 } from "@/lib/items/form";
+import type { Place } from "@/lib/places";
 import { timeZoneOptions } from "@/lib/time";
 import type { ItemType, Trip } from "@/types";
 import { PAYMENT_LABEL, STATUS_LABEL } from "./labels";
+import { PlaceSearch, placeSearchEnabled } from "./PlaceSearch";
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
@@ -91,9 +93,16 @@ export function ItemForm({ trip, defaultValues, submitLabel, onSubmit, onCancel,
       hint: "Type a city, like Tokyo or Los Angeles",
     });
   // Each place is its own group, so its fields can share short labels (From → Address, To → Address).
+  const fillPlace = (end: "start" | "end", p: Place) => {
+    const fields = { location_name: p.name, address: p.address, lat: p.lat, lng: p.lng };
+    for (const [key, value] of Object.entries(fields)) {
+      setValue(`${end}_${key}` as keyof ItemFormValues, value, { shouldDirty: true, shouldValidate: true });
+    }
+  };
   const place = (end: "start" | "end", legend: string) => (
     <fieldset className="grid grid-cols-2 gap-3">
       <legend className="mb-2 text-sm font-medium text-muted-foreground">{legend}</legend>
+      {placeSearchEnabled && <PlaceSearch onPick={(p) => fillPlace(end, p)} />}
       {input(`${end}_location_name`, "Place name", { className: "col-span-2", autoComplete: "off" })}
       {input(`${end}_address`, "Address", { className: "col-span-2", autoComplete: "off" })}
       {input(`${end}_lat`, "Latitude", { inputMode: "decimal" })}

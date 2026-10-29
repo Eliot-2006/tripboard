@@ -191,3 +191,70 @@ test("duplicates an item right after the original, as an unpaid planned copy (IT
   await expect(figure("Paid")).toHaveText(paid!);
   await expect(figure("Estimated cost")).toHaveText("$2,972");
 });
+
+const geocode = (name: string, address: string, lng: number, lat: number) => ({
+  id: `poi.${name}`,
+  type: "Feature",
+  place_type: ["poi"],
+  text: name,
+  place_name: `${name}, ${address}`,
+  center: [lng, lat],
+  geometry: { type: "Point", coordinates: [lng, lat] },
+});
+
+test("searches for a place and fills its name, address and coordinates (GEO-1)", async ({ page }) => {
+  const queries: string[] = [];
+  await page.route("https://api.maptiler.com/geocoding/**", async (route) => {
+    const url = new URL(route.request().url());
+    queries.push(decodeURIComponent(url.pathname.split("/").pop()!).replace(/\.json$/, ""));
+    expect(url.searchParams.get("key")).toBe("e2e-key");
+    await route.fulfill({
+      json: {
+        type: "FeatureCollection",
+        features: [
+          geocode("Nishiki Market", "Nakagyo, Kyoto, Japan", 135.764, 35.005),
+          geocode("Nishiki Tenmangu", "Nakagyo, Kyoto, Japan", 135.766, 35.007),
+        ],
+      },
+    });
+  });
+  await day(page, 7).getByRole("button", { name: "Add something" }).click();
+  await card(dialog(page), "Activity").click();
+  const d = dialog(page);
+  await d.getByLabel("Name", { exact: true }).fill("Lunch");
+  await d.getByLabel("Start time", { exact: true }).fill("12:00");
+
+  const where = d.getByRole("group", { name: "Where", exact: true });
+  const search = where.getByRole("combobox", { name: "Search for a place" });
+  await search.fill("n"); // under 2 characters: no request
+  await search.pressSequentially("ishiki");
+  const options = page.getByRole("option");
+  await expect(options).toHaveCount(2);
+  await expect(page.getByRole("link", { name: "© MapTiler" })).toBeVisible();
+  expect(queries).toEqual(["nishiki"]); // typing is debounced into one request
+
+  await search.press("ArrowDown");
+  await search.press("Enter");
+  await expect(where.getByLabel("Place name")).toHaveValue("Nishiki Market");
+  await expect(where.getByLabel("Address")).toHaveValue("Nakagyo, Kyoto, Japan");
+  await expect(where.getByLabel("Latitude")).toHaveValue("35.005");
+  await expect(where.getByLabel("Longitude")).toHaveValue("135.764");
+  await expect(search).toHaveValue("");
+  await d.getByRole("button", { name: "Add activity" }).click();
+
+  const details = page.getByRole("region", { name: "Item details" });
+  await expect(details).toContainText("Nishiki Market");
+  await expect(details).toContainText("Nakagyo, Kyoto, Japan");
+});
+
+test("place search failing leaves manual entry working (GEO-1)", async ({ page }) => {
+  await page.route("https://api.maptiler.com/geocoding/**", (route) => route.fulfill({ status: 403, body: "denied" }));
+  await page.getByRole("button", { name: "Add to trip" }).click();
+  await card(dialog(page), "Stay").click();
+  const d = dialog(page);
+  await d.getByRole("combobox", { name: "Search for a place" }).fill("Kyoto");
+  await expect(page.getByText("Search isn't available right now")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await d.getByLabel("Place name").fill("Machiya Inn");
+  await expect(d.getByLabel("Place name")).toHaveValue("Machiya Inn");
+});
