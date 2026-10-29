@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { GoogleButton } from "./GoogleButton";
 
 type Mode = "login" | "signup";
 
@@ -17,6 +18,8 @@ const COPY = {
 } as const;
 
 const MIN_PASSWORD = 6;
+
+const GOOGLE_FAILED = "We couldn't sign you in with Google. Please try again, or use your email and password.";
 
 /** What went wrong, in words a traveler can act on. */
 function explain(error: unknown, mode: Mode): string {
@@ -34,15 +37,15 @@ function explain(error: unknown, mode: Mode): string {
   return mode === "login" ? "We couldn't log you in. Please try again." : "We couldn't create your account. Please try again.";
 }
 
-/** Email and password sign-in and sign-up (AUTH-1, AUTH-2). Both land on the trip list. */
-export function AuthForm({ mode }: { mode: Mode }) {
+/** Email and password, or Google, sign-in and sign-up (AUTH-1, AUTH-2, AUTH-4). All land on the trip list. `googleError`: Google sign-in just failed. */
+export function AuthForm({ mode, googleError = false }: { mode: Mode; googleError?: boolean }) {
   const copy = COPY[mode];
   const router = useRouter();
   const uid = useId();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(googleError ? GOOGLE_FAILED : null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -86,6 +89,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
   return (
     <div className="flex w-full max-w-sm flex-col gap-6">
       <h1 className="text-4xl font-semibold tracking-tight font-stretch-condensed sm:text-5xl">{copy.title}</h1>
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
       {notice ? (
         <p role="status" className="text-lg">
           {notice}
@@ -113,15 +121,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
               />
             )}
           </Field>
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
           <Button type="submit" className="min-h-11 text-base" disabled={busy}>
             {busy ? copy.busy : copy.submit}
           </Button>
         </form>
+      )}
+      {!notice && (
+        <>
+          <div aria-hidden="true" className="flex items-center gap-3 text-sm text-muted-foreground before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+            or
+          </div>
+          <GoogleButton onError={setError} />
+        </>
       )}
       <p className="text-sm text-muted-foreground">
         {copy.other}{" "}

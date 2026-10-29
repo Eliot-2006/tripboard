@@ -7,14 +7,14 @@ import { currentUser } from "@/lib/supabase/server";
 import { cn } from "cn";
 
 /** The log in and sign up pages. Someone already signed in goes straight to their trips. */
-export async function AuthPage({ mode }: { mode: "login" | "signup" }) {
+export async function AuthPage({ mode, googleError = false }: { mode: "login" | "signup"; googleError?: boolean }) {
   const user = await currentUser();
   if (user.unavailable) return <Unavailable />;
   if (user.id) redirect("/trips");
   return (
     <AccountShell>
       <div className={cn("flex flex-1 flex-col py-12 sm:py-16", GUTTER)}>
-        <AuthForm mode={mode} />
+        <AuthForm mode={mode} googleError={googleError} />
       </div>
     </AccountShell>
   );

@@ -23,7 +23,7 @@ A travel planner that keeps a whole trip in one place: a day-by-day itinerary, a
 - Spending by item type, and a text warning when the trip is over budget
 
 **Accounts**
-- Email and password sign-up and sign-in on Supabase
+- Email and password sign-up and sign-in on Supabase, or "Continue with Google" (needs the setup below)
 - Upcoming and past trip groups; create, edit and delete trips
 - Every trip is private to its owner (Row Level Security)
 - `/demo` runs the same workspace on a seeded, in-memory trip; changes reset on refresh
@@ -78,7 +78,7 @@ A travel planner that keeps a whole trip in one place: a day-by-day itinerary, a
 ## Testing
 
 ```bash
-npm test          # Vitest: 173 unit and repository tests
+npm test          # Vitest: unit and repository tests
 npm run e2e       # Playwright on Chromium (starts the dev server)
 npm run e2e:all   # Playwright on every configured project
 ```
@@ -117,6 +117,20 @@ npm run e2e       # Playwright (Chromium)
 npx next typegen  # generate route types; run before `tsc --noEmit`
 ```
 
+### Google sign-in setup
+
+The "Continue with Google" button on `/login` and `/signup` uses Supabase OAuth. It fails until the provider is enabled:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), configure the OAuth consent screen, then create an **OAuth client ID** of type **Web application**. Under **Authorized redirect URIs** add the Supabase callback shown in the provider settings, `https://<project-ref>.supabase.co/auth/v1/callback`. (Authorized JavaScript origins are not needed.)
+2. In Supabase, **Authentication → Sign In / Providers → Google**: turn it on and paste the client ID and client secret.
+3. In Supabase, **Authentication → URL Configuration → Redirect URLs**, allow the app's callback, which carries a `?next=` query, so use a wildcard:
+   - `http://localhost:3000/auth/callback**`
+   - `https://tripboard-coral.vercel.app/auth/callback**`
+
+   Without a match, Supabase sends users to the Site URL instead and sign-in never completes. Keep **Site URL** as `https://tripboard-coral.vercel.app`.
+
+The browser returns to `/auth/callback`, which swaps the code for a session and redirects to `next`. Only a path on this site is followed (it must start with a single `/`); anything else goes to `/trips`. A failed sign-in lands on `/login` with a message.
+
 The database schema is in `supabase/migrations/`. To check row isolation, paste `supabase/tests/rls_isolation.sql` into the Supabase SQL Editor; it rolls itself back.
 
 ## Project structure
@@ -140,7 +154,6 @@ docs/                  product docs and screenshots
 
 ## Roadmap
 
-- Google sign-in
 - Place search
 - Import booking PDFs and screenshots into reviewable draft items using AI
 - Travel-time and schedule warnings
