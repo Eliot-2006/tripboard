@@ -3,6 +3,7 @@ import { shiftItemToDay } from "@/lib/time";
 import { ItemSchema, NewItemSchema, NewTripSchema, TripSchema } from "@/types/schemas";
 import type { Item, ItemPatch, NewItem, NewTrip, Trip } from "@/types";
 import { defined, type Repository } from "./repository";
+import { toSharedTrip } from "./shared";
 
 const DEMO_USER = "demo-user";
 const now = () => new Date().toISOString();
@@ -41,7 +42,14 @@ export class DemoRepository implements Repository {
   async createTrip(input: NewTrip) {
     const data = NewTripSchema.parse(input);
     const stamp = now();
-    const trip: Trip = { ...data, id: crypto.randomUUID(), user_id: DEMO_USER, created_at: stamp, updated_at: stamp };
+    const trip: Trip = {
+      ...data,
+      id: crypto.randomUUID(),
+      user_id: DEMO_USER,
+      share_token: null,
+      created_at: stamp,
+      updated_at: stamp,
+    };
     this.trips.push(trip);
     return structuredClone(trip);
   }
@@ -86,5 +94,27 @@ export class DemoRepository implements Repository {
   async moveItem(id: string, day: string, position: number) {
     const item = this.items[this.itemIndex(id)];
     return this.updateItem(id, { day, position, ...shiftItemToDay(item, day) });
+  }
+
+  // Links only open from this page load's memory, so the demo does not offer them in the UI. The methods exist so the
+  // repository contract (and the privacy rules) are checked against both implementations.
+  async enableSharing(tripId: string) {
+    return this.setShareToken(tripId, crypto.randomUUID());
+  }
+
+  async revokeSharing(tripId: string) {
+    return this.setShareToken(tripId, null);
+  }
+
+  async getSharedTrip(token: string) {
+    const trip = this.trips.find((t) => t.share_token !== null && t.share_token === token);
+    // toSharedTrip copies what it keeps, so nothing here is shared with the store.
+    return trip ? toSharedTrip({ trip, items: sortItems(this.items.filter((x) => x.trip_id === trip.id)) }, token) : null;
+  }
+
+  private setShareToken(tripId: string, share_token: string | null) {
+    const i = this.tripIndex(tripId);
+    this.trips[i] = { ...this.trips[i], share_token, updated_at: now() };
+    return structuredClone(this.trips[i]);
   }
 }

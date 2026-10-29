@@ -8,10 +8,21 @@ import type { Trip } from "@/types";
 /** Side padding shared by every full-width band, growing with the screen. */
 export const GUTTER = "px-4 sm:px-6 lg:px-8 2xl:px-12";
 
-type Props = { trip: Trip; days: string[]; onAdd: () => void; onEdit: () => void; /** Links above the name, e.g. back to all trips. */ nav?: ReactNode };
+type Props = {
+  trip: Trip;
+  days: string[];
+  onAdd: () => void;
+  onEdit: () => void;
+  /** Offers "Share". Left out where a trip can't be shared, such as the demo. */
+  onShare?: () => void;
+  /** A shared view: no buttons to change the trip. */
+  readOnly?: boolean;
+  /** Links above the name, e.g. back to all trips. */
+  nav?: ReactNode;
+};
 
 /** The black band of a subway sign: trip name, dates, and a strip map of the days in view that jumps to each one. */
-export function TripHeader({ trip, days, onAdd, onEdit, nav }: Props) {
+export function TripHeader({ trip, days, onAdd, onEdit, onShare, readOnly, nav }: Props) {
   const length = dayDiff(trip.start_date, trip.end_date) + 1;
   const facts = [
     `${formatDay(trip.start_date)} to ${formatDay(trip.end_date)}`,
@@ -28,18 +39,29 @@ export function TripHeader({ trip, days, onAdd, onEdit, nav }: Props) {
           </h1>
           <p className="mt-2 text-sm text-signage-muted tabular-nums">{facts.join(" · ")}</p>
         </div>
-        <div className="flex gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
-          <Button
-            variant="outline"
-            className="min-h-11 border-signage-foreground/30 bg-transparent px-4 text-signage-foreground hover:bg-signage-foreground/10 hover:text-signage-foreground"
-            onClick={onEdit}
-          >
-            Edit trip
-          </Button>
-          <Button className="min-h-11 bg-signage-foreground px-4 text-signage hover:bg-signage-foreground/85" onClick={onAdd}>
-            Add to trip
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
+            {onShare && (
+              <Button
+                variant="outline"
+                className="min-h-11 border-signage-foreground/30 bg-transparent px-4 text-signage-foreground hover:bg-signage-foreground/10 hover:text-signage-foreground"
+                onClick={onShare}
+              >
+                Share
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="min-h-11 border-signage-foreground/30 bg-transparent px-4 text-signage-foreground hover:bg-signage-foreground/10 hover:text-signage-foreground"
+              onClick={onEdit}
+            >
+              Edit trip
+            </Button>
+            <Button className="min-h-11 bg-signage-foreground px-4 text-signage hover:bg-signage-foreground/85" onClick={onAdd}>
+              Add to trip
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Below sm the strip can overflow, so its end fades out to show there are more days to scroll to. */}

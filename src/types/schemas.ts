@@ -16,6 +16,8 @@ const TripBase = z.object({
   destinations: z.array(z.string()),
   currency: z.string().length(3),
   total_budget: money.nullable(),
+  /** Set while the trip has a read-only share link. The database picks it; null means not shared. */
+  share_token: z.string().nullable().default(null),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -27,6 +29,7 @@ export const TripSchema = TripBase.refine(endNotBeforeStart, tripDateIssue);
 export const NewTripSchema = TripBase.omit({
   id: true,
   user_id: true,
+  share_token: true,
   created_at: true,
   updated_at: true,
 }).refine(endNotBeforeStart, tripDateIssue);

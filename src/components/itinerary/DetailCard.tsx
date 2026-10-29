@@ -24,25 +24,30 @@ type Props = {
   onMoveToDay: (day: string) => void;
   /** Inside the phone sheet, which has its own frame. */
   bare?: boolean;
+  /** A shared view: only what a link may show, and no way to change the item. */
+  readOnly?: boolean;
 };
 
-export function DetailCard({ id, item, currency, onClose, onEdit, onDuplicate, onDelete, days, tripStart, onMoveToDay, bare }: Props) {
+export function DetailCard({ id, item, currency, onClose, onEdit, onDuplicate, onDelete, days, tripStart, onMoveToDay, bare, readOnly }: Props) {
   const moveId = useId();
   const [moveTo, setMoveTo] = useState(item.day);
   const startTz = item.start_timezone ?? "UTC";
   const money = (n: number | null) => (n === null ? null : formatMoney(n, currency));
-  const rows: [string, string | null][] = [
+  type Row = [string, string | null];
+  // Costs, payment, confirmation and notes are private: a shared view never lists them.
+  const costs: Row[] = readOnly ? [] : [["Estimated cost", money(item.estimated_cost)], ["Actual cost", money(item.actual_cost)]];
+  const privateRows: Row[] = readOnly
+    ? []
+    : [["Payment", PAYMENT_LABEL[item.payment_status]], ["Confirmation", item.confirmation_number], ["Notes", item.notes]];
+  const rows: Row[] = [
     ["Type", kindLabel(item)],
     ["Starts", item.is_flexible || !item.start_at ? "Anytime" : formatDateTime(item.start_at, startTz)],
     ["Ends", item.end_at ? formatDateTime(item.end_at, item.end_timezone ?? startTz) : null],
     ["Location", locationLabel(item)],
     ["Address", item.start_address],
-    ["Estimated cost", money(item.estimated_cost)],
-    ["Actual cost", money(item.actual_cost)],
+    ...costs,
     ["Booking", STATUS_LABEL[item.status]],
-    ["Payment", PAYMENT_LABEL[item.payment_status]],
-    ["Confirmation", item.confirmation_number],
-    ["Notes", item.notes],
+    ...privateRows,
   ];
   const hasPin = item.start_lat !== null && item.start_lng !== null;
 
@@ -66,40 +71,44 @@ export function DetailCard({ id, item, currency, onClose, onEdit, onDuplicate, o
         )}
       </dl>
       {!hasPin && <p className="px-4 pb-4 text-sm text-muted-foreground">No map location</p>}
-      {/* The touch and keyboard alternative to dragging (ITIN-7). A separate button, so browsing the list moves nothing. */}
-      <div className="flex flex-wrap items-end gap-2 border-t px-4 py-3">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={moveId}>Move to day</Label>
-          <NativeSelect id={moveId} value={moveTo} onChange={(e) => setMoveTo(e.target.value)} className="w-auto">
-            {days.map((d) => (
-              <option key={d} value={d}>
-                {`Day ${dayDiff(tripStart, d) + 1} · ${formatDay(d)}`}
-              </option>
-            ))}
-          </NativeSelect>
+      {!readOnly && (
+        <>
+        {/* The touch and keyboard alternative to dragging (ITIN-7). A separate button, so browsing the list moves nothing. */}
+        <div className="flex flex-wrap items-end gap-2 border-t px-4 py-3">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={moveId}>Move to day</Label>
+            <NativeSelect id={moveId} value={moveTo} onChange={(e) => setMoveTo(e.target.value)} className="w-auto">
+              {days.map((d) => (
+                <option key={d} value={d}>
+                  {`Day ${dayDiff(tripStart, d) + 1} · ${formatDay(d)}`}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          {/* aria-disabled, not disabled: after a move the button stays focused instead of dropping focus. */}
+          <Button
+            variant="outline"
+            className="min-h-11 px-4 aria-disabled:opacity-50"
+            aria-disabled={moveTo === item.day}
+            onClick={() => moveTo !== item.day && onMoveToDay(moveTo)}
+          >
+            Move
+          </Button>
         </div>
-        {/* aria-disabled, not disabled: after a move the button stays focused instead of dropping focus. */}
-        <Button
-          variant="outline"
-          className="min-h-11 px-4 aria-disabled:opacity-50"
-          aria-disabled={moveTo === item.day}
-          onClick={() => moveTo !== item.day && onMoveToDay(moveTo)}
-        >
-          Move
-        </Button>
-      </div>
-      {/* Delete sits at the far end, away from Edit, so it is never hit by accident. */}
-      <div className="flex gap-2 border-t px-4 py-3">
-        <Button variant="outline" className="min-h-11 px-4" onClick={onEdit}>
-          Edit
-        </Button>
-        <Button variant="outline" className="min-h-11 px-4" onClick={onDuplicate}>
-          Duplicate
-        </Button>
-        <Button variant="ghost" className="ml-auto min-h-11 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
-          Delete
-        </Button>
-      </div>
+        {/* Delete sits at the far end, away from Edit, so it is never hit by accident. */}
+        <div className="flex gap-2 border-t px-4 py-3">
+          <Button variant="outline" className="min-h-11 px-4" onClick={onEdit}>
+            Edit
+          </Button>
+          <Button variant="outline" className="min-h-11 px-4" onClick={onDuplicate}>
+            Duplicate
+          </Button>
+          <Button variant="ghost" className="ml-auto min-h-11 px-4 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
+            Delete
+          </Button>
+        </div>
+        </>
+      )}
     </section>
   );
 }
