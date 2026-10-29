@@ -1,9 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { makeItem } from "@/test/factories";
 import { DAY_COLORS } from "@/lib/map/colors";
-import { arcPoints, buildPath, longitudeShift, mapStops } from "@/lib/map/path";
+import { arcPoints, buildPath, distanceKm, longitudeShift, mapStops } from "@/lib/map/path";
 
 const at = (lat: number, lng: number) => ({ start_lat: lat, start_lng: lng });
+
+describe("distanceKm", () => {
+  it("is zero for the same point and about 111 km per degree of latitude", () => {
+    expect(distanceKm([10, 20], [10, 20])).toBe(0);
+    expect(distanceKm([0, 0], [1, 0])).toBeCloseTo(111.19, 1);
+  });
+
+  it("measures Los Angeles to Tokyo across the Pacific", () => {
+    expect(distanceKm([33.9416, -118.4085], [35.5494, 139.7798])).toBeCloseTo(8815, -2);
+  });
+});
 
 describe("buildPath", () => {
   it("joins consecutive stops with a line from exit to entry", () => {
