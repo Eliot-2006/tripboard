@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { card } from "./helpers";
+import { card, day } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/demo");
@@ -28,6 +28,15 @@ test("shows every trip day, the empty state and the Anytime label (ITIN-1, ITIN-
   await expect(page.getByText("Nothing planned yet.")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Add something" })).toHaveCount(2);
   await expect(card(page, "Explore Akihabara")).toContainText("Anytime");
+});
+
+test("shows free-time hints between timed items, and hides them with the day (PRD V3)", async ({ page }) => {
+  // Senso-ji ends 11:00 and teamLab starts 14:00 (Tokyo); Fushimi Inari ends 10:00 and the Gion dinner starts 18:30.
+  await expect(day(page, 3).getByText("Free time: 3 h")).toBeVisible();
+  await expect(day(page, 6).getByText("Free time: 8 h 30 min")).toBeVisible();
+  await expect(day(page, 2).getByText(/Free time|Overlap|Tight/)).toHaveCount(0);
+  await page.getByRole("button", { name: /^Day 3 · / }).click();
+  await expect(page.getByText("Free time: 3 h")).toHaveCount(0);
 });
 
 test("selecting an item opens its details and Close clears them (ITIN-3)", async ({ page }) => {

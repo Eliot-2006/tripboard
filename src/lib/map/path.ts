@@ -5,9 +5,16 @@ import type { Item } from "@/types";
 export type LatLng = [number, number];
 export type Segment = { from: LatLng; to: LatLng; kind: "line" | "arc" };
 
-const startOf = (i: Item): LatLng | null => (i.start_lat !== null && i.start_lng !== null ? [i.start_lat, i.start_lng] : null);
-const endOf = (i: Item): LatLng | null => (i.end_lat !== null && i.end_lng !== null ? [i.end_lat, i.end_lng] : null);
+export const startOf = (i: Item): LatLng | null => (i.start_lat !== null && i.start_lng !== null ? [i.start_lat, i.start_lng] : null);
+export const endOf = (i: Item): LatLng | null => (i.end_lat !== null && i.end_lng !== null ? [i.end_lat, i.end_lng] : null);
 const same = (a: LatLng, b: LatLng) => a[0] === b[0] && a[1] === b[1];
+
+/** Great-circle distance in kilometres (haversine). */
+export function distanceKm(a: LatLng, b: LatLng): number {
+  const rad = Math.PI / 180;
+  const h = Math.sin(((b[0] - a[0]) * rad) / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(((b[1] - a[1]) * rad) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
 
 /**
  * The route through `items`, in visit order (MAP-3). Each item is entered at its start location and left from its
