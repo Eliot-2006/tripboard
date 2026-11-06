@@ -20,13 +20,13 @@ async function createClient() {
 }
 
 /**
- * The signed-in user's id, verified from the session cookie. `unavailable` means Supabase isn't configured or could not
+ * The signed-in user's id and email, verified from the session cookie. `unavailable` means Supabase isn't configured or could not
  * be reached (for example a paused free project), so pages can say so and point to the demo instead of treating it as
  * signed out.
  */
-export async function currentUser(): Promise<{ id: string | null; unavailable: boolean }> {
-  if (!supabaseEnv) return { id: null, unavailable: true };
+export async function currentUser(): Promise<{ id: string | null; email: string | null; unavailable: boolean }> {
+  if (!supabaseEnv) return { id: null, email: null, unavailable: true };
   const { data, error } = await (await createClient()).auth.getClaims();
-  if (data) return { id: data.claims.sub, unavailable: false };
-  return { id: null, unavailable: isAuthRetryableFetchError(error) };
+  if (data) return { id: data.claims.sub, email: data.claims.email ?? null, unavailable: false };
+  return { id: null, email: null, unavailable: isAuthRetryableFetchError(error) };
 }
