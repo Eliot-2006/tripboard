@@ -105,6 +105,8 @@ The demo at `/demo` works without any environment variables. For accounts, set t
 | `NEXT_PUBLIC_MAP_TILE_URL` | Optional. Tile URL template, defaults to OpenStreetMap |
 | `NEXT_PUBLIC_MAP_ATTRIBUTION` | Optional. Attribution for the tile provider |
 | `NEXT_PUBLIC_MAPTILER_KEY` | Optional. MapTiler key for place search in the item form. Defaults to the `key` in a MapTiler `NEXT_PUBLIC_MAP_TILE_URL`; with neither, search is hidden and places are typed by hand. Restrict the key by HTTP origin in MapTiler |
+| `ANTHROPIC_API_KEY` | Optional, server-only. Turns on "Import booking" for signed-in trips (PDF or screenshot read by Claude Haiku, reviewed before anything is added). Unset hides the action. Set a spend limit on the key |
+| `IMPORT_ALLOWED_EMAILS` | Comma-separated emails allowed to use Import booking. Empty means nobody. Sign-ups aren't email-verified, so list only accounts that already exist |
 
 Scripts:
 
