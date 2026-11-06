@@ -104,6 +104,7 @@ The demo at `/demo` works without any environment variables. For accounts, set t
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
 | `NEXT_PUBLIC_MAP_TILE_URL` | Optional. Tile URL template, defaults to OpenStreetMap |
 | `NEXT_PUBLIC_MAP_ATTRIBUTION` | Optional. Attribution for the tile provider |
+| `NEXT_PUBLIC_MAPTILER_KEY` | Optional. MapTiler key for place search in the item form. Defaults to the `key` in a MapTiler `NEXT_PUBLIC_MAP_TILE_URL`; with neither, search is hidden and places are typed by hand. Restrict the key by HTTP origin in MapTiler |
 
 Scripts:
 
