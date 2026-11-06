@@ -13,6 +13,17 @@ A travel planner that keeps a whole trip in one place: a day-by-day itinerary, a
 - Add, edit, duplicate and delete items; collapsible days; a date range filter for the whole trip or a slice of it
 - Drag and drop within a day or between days, with a "Move to day" control as a non-drag alternative
 - Times shown in each place's own time zone (for example a Los Angeles departure and a Tokyo arrival)
+- Schedule notes between items: overlaps, tight connections (with travel time estimated from distance) and free time
+- Place search in the item form fills in the name, address and coordinates (MapTiler geocoding)
+
+**Import a booking (AI)**
+- Upload a confirmation PDF or screenshot; Claude Haiku reads it into draft items you review before anything is saved
+- Likely duplicates of items already in the trip are flagged
+- Limited to allowlisted accounts, since each import costs money; not available in the demo
+
+**Sharing**
+- A read-only link for any trip, viewable without an account
+- Turn the link off or make a new one at any time; old links stop working
 
 **Map**
 - Numbered pins and per-day colored routes, with flight arcs between cities
@@ -27,6 +38,7 @@ A travel planner that keeps a whole trip in one place: a day-by-day itinerary, a
 - Upcoming and past trip groups; create, edit and delete trips
 - Every trip is private to its owner (Row Level Security)
 - `/demo` runs the same workspace on a seeded, in-memory trip; changes reset on refresh
+- Installable as an app (web app manifest and icons)
 
 **Mobile and accessibility**
 - Phone layout with an Itinerary / Map toggle and a bottom sheet for item details
@@ -51,9 +63,10 @@ A travel planner that keeps a whole trip in one place: a day-by-day itinerary, a
 ## Engineering highlights
 
 - **One repository interface, two backends.** The UI talks to a `Repository` interface. An in-memory `DemoRepository` powers `/demo`; a `SupabaseRepository` powers accounts. A single contract test runs against both, so they stay interchangeable.
-- **Row Level Security.** Authorization lives in Postgres policies, not in app code. `supabase/tests/rls_isolation.sql` checks that one user cannot read or change another user's trips.
+- **Row Level Security.** Authorization lives in Postgres policies, not in app code. `supabase/tests/rls_isolation.sql` checks that one user cannot read or change another user's trips, and that a share link exposes only that one trip, read-only, through a single `security definer` function.
+- **Untrusted AI output.** The import route checks the file's real type from its bytes, caps size, and validates the model's JSON against a Zod schema before it reaches the UI. Nothing is saved until the user confirms each draft.
 - **Optimistic updates with rollback.** Reordering and moving items updates the UI immediately through TanStack Query and restores the previous state if the write fails.
-- **Pure, tested logic.** Time zone conversion, budget totals, item ordering and map path building are plain functions in `src/lib/`, with no date, money or ordering math inside components. 173 unit tests cover them.
+- **Pure, tested logic.** Time zone conversion, budget totals, item ordering and map path building are plain functions in `src/lib/`, with no date, money or ordering math inside components. 244 unit tests cover them.
 - **Accessible drag and drop.** Keyboard and touch sensors, custom screen reader announcements for pickup and drop, focus returned to the moved item, and a "Move to day" fallback for anyone who does not drag.
 - **Swappable map tiles.** The tile URL and attribution come from environment variables, so the provider can change without a code change.
 
@@ -78,15 +91,16 @@ A travel planner that keeps a whole trip in one place: a day-by-day itinerary, a
 ## Testing
 
 ```bash
-npm test          # Vitest: 173 unit and repository tests
+npm test          # Vitest: 244 unit and repository tests
 npm run e2e       # Playwright on Chromium (starts the dev server)
 npm run e2e:all   # Playwright on every configured project
 ```
 
-- **Unit tests** cover time zones, budget math, ordering, map paths, form validation and the demo repository.
+- **Unit tests** cover time zones, budget math, ordering, map paths, schedule notes, place search parsing, the import route and its parsing, form validation and the demo repository.
 - **Repository contract** runs against the Supabase repository too when `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` for a dedicated test account are set in `.env.local`. It deletes that account's trips afterwards and is skipped otherwise.
-- **End-to-end tests** cover the landing page, the demo workspace, item add/edit/delete, moving items, the map and signed-in account flows.
+- **End-to-end tests** cover the landing page, the demo workspace, item add/edit/delete, place search, moving items, the map, sharing, booking import (with the API mocked) and signed-in account flows.
 - **Browser projects:** Chromium, WebKit, iPhone 13, Pixel 7 and a tablet viewport run with `npm run e2e:all`. Firefox is configured as well.
+- **CI:** GitHub Actions runs the type check, lint, unit tests and Playwright on Chromium and Firefox for every pull request.
 
 ## Run locally
 
@@ -126,11 +140,12 @@ The database schema is in `supabase/migrations/`. To check row isolation, paste 
 
 ```
 src/
-  app/                 routes: landing, /demo, /login, /signup, /trips, /trips/[tripId]
+  app/                 routes: landing, /demo, /login, /signup, /trips, /trips/[tripId], /share/[token], /api/import
   components/          trip, itinerary, budget, map, auth, and ui primitives
   lib/
     data/              Repository interface, DemoRepository, SupabaseRepository, query hooks
-    time/ budget/ ordering/ map/ items/ trips/   pure, tested logic
+    time/ budget/ ordering/ map/ items/ trips/ schedule/ places/   pure, tested logic
+    import/            file checks, model call and draft mapping for Import booking
     supabase/          browser and server clients
   types/               Zod schemas and inferred types
 e2e/                   Playwright tests
@@ -143,8 +158,5 @@ docs/                  product docs and screenshots
 
 ## Roadmap
 
-- Google sign-in
-- Place search
-- Import booking PDFs and screenshots into reviewable draft items using AI
-- Travel-time and schedule warnings
-- Read-only trip sharing
+- Google sign-in (built on the `feat/google-sign-in` branch, not merged; needs a Google OAuth client)
+- Per-user import limits, if Import booking opens up beyond the allowlist

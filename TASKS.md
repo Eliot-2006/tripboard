@@ -38,10 +38,18 @@ The user commits and pushes themselves (global CLAUDE.md). Workers do not commit
 | A2 | Keep the free Supabase project awake | NFR | P0 | T7 | DONE | orchestrator | Daily Vercel cron → /api/keepalive |
 | A3 | Remove disposable test users; sign-up test no longer creates users | – | – | – | DONE | orchestrator | Deleted 94 tripboard-e2e users (approved). Sign-up e2e mocks Supabase |
 | T8 | Sign in with Google | AUTH-4 | P1 | – | BLOCKED | | Needs Google OAuth client configured in Supabase by the user |
+| C1 | GitHub Actions CI (lint, tsc, unit, e2e Chromium + Firefox) and installable web app manifest | NFR-5, V3 | P1 | – | REVIEW | Sonnet · ci-and-pwa (344bafc) | Reviewed by orchestrator. No service worker (offline out of scope). Workflow not yet run on GitHub; Firefox unverified until it does |
+| V3-1 | Schedule warnings: overlaps, tight connections, free time | V3 | P2 | – | REVIEW | Sonnet · feat/schedule-warnings (ec595ec) | Reviewed; rerun: 177 unit, tsc, lint clean. 30 km/h straight-line heuristic over-warns on intercity gaps. Nit: `DaySectionProps ={` spacing in Itinerary.tsx |
+| V3-2 | Read-only share page with private fields hidden | V3 | P2 | – | REVIEW | Sonnet · feat/share-page (05688c3) | Security-definer RPC, DB-chosen tokens, no anon table access. Codex review: no high/med; 2 low (SQL test could pass vacuously on null compares; cross-user counts printed, not asserted). Orchestrator fixed both (uncommitted in the agent worktree); PGlite: passes, and fails on 3 mutants the old test missed. Migration NOT applied: user applies, then reruns rls_isolation.sql in the SQL Editor |
+| G1 | Place search in the item form (MapTiler geocoding, existing key) | GEO-1 | P2 | – | REVIEW | Sonnet cloud · feat/place-search (c94c0c5) | Hidden when no key. API shape checked against MapTiler docs by orchestrator (cloud couldn't reach them). README conflicts with ai-import (env table, keep both rows) |
+| T8b | Google sign-in code (callback route, open-redirect guard) | AUTH-4 | P1 | – | REVIEW | Sonnet cloud · feat/google-sign-in (e04e20d) | Merge only after the user enables Google in Supabase (README has steps). Codex: no high/med; 20 redirect probes held. Low: an unexpected thrown error in the callback gives a 500 |
+| V2-1 | AI booking import, minimal (PDF/image → drafts → review → create) | V2 | P2 | – | REVIEW | Sonnet cloud · feat/ai-import (1bb4da8) | No Storage/table; hidden without ANTHROPIC_API_KEY. Cloud npm dropped 10 lockfile libc markers: fixed lockfile in ai-import-lockfix worktree (uncommitted). Codex: 1 med (any signed-up account could run paid imports) → fixed with server-only IMPORT_ALLOWED_EMAILS allowlist (403 + hidden action), uncommitted in ai-import-lockfix. Low: body fully buffered before byte check (no remote bypass found). Review dialog never run in a browser |
 | – | Place search | GEO-1 | P2 | – | BACKLOG | | Deferred per PRD |
 
 ## Decisions
 
+- 2026-10-28: Agent(isolation: remote) fell back to local worktrees, so cloud work runs as one-time claude.ai routines (RemoteTrigger) with all MCP connectors cleared. Cloud commits are authored `Claude <noreply@anthropic.com>`: squash-merge or re-author before merging.
+- 2026-10-28: V1 done. Next wave runs on cloud Sonnet agents that push branches (no PRs); the user re-commits under their own name before merging.
 - 2026-10-28: Codex workers run gpt-6.1-sol (no gpt-6.1-terra exists). Known flake: move.spec "drops onto a collapsed day" on WebKit, about 1 in 30 under load; body unchanged from main.
 
 - 2026-10-15: Claude usage is low, so new workers (T9, T6, reviews) run on Codex. Running Claude workers finish their tasks.
